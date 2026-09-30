@@ -97,11 +97,15 @@ def _pkg_command(pm: str, package: str, unattended: bool) -> list[str]:
     raise ValueError(f"Unsupported package manager: {pm}")
 
 
-def _run_native(command: list[str], pm: str, unattended: bool) -> subprocess.CompletedProcess:
+def _run_native(command: list[str], pm: str, unattended: bool, *, timeout: int = 1800) -> subprocess.CompletedProcess:
     # Stream the native installer so sudo can prompt normally and package
     # progress is visible. Elevation is limited to the package operation.
     if pm == "brew":
-        return subprocess.run(command, check=False, timeout=1800)
+        environment = {**os.environ, "HOMEBREW_NO_AUTO_UPDATE": "1",
+                       "HOMEBREW_NO_INSTALL_UPGRADE": "1",
+                       "HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK": "1",
+                       "HOMEBREW_NO_INSTALL_CLEANUP": "1"}
+        return subprocess.run(command, check=False, timeout=timeout, env=environment)
     if os.geteuid() == 0:
         return subprocess.CompletedProcess(command, 1, "", "Refusing native package operations as root")
     sudo = shutil.which("sudo")
@@ -541,7 +545,7 @@ def _runtime_env(root: Path, bin_dir: Path, env: dict | None = None) -> dict:
 def _prepare_intel_builds(platform: dict, requested: set, dry_run: bool) -> dict:
     if platform.get("os") != "macos" or platform.get("arch") != "x86_64":
         return _result("intel-build", "skipped", "Intel Mac source builds do not apply to this host", required=False)
-    detail = "Explicit Intel build: Homebrew tmux/btop dependencies and OpenSSL; Hermes uses isolated pinned Rust. Allow 20–60 minutes and several hundred MiB."
+    detail = "Explicit Intel build: Homebrew tmux/btop dependencies and OpenSSL; Hermes uses isolated pinned Rust. Allow 20–90 minutes and several hundred MiB."
     if dry_run:
         return _result("intel-build", "skipped", "Dry run: " + detail)
     print(detail, file=sys.stderr, flush=True)
@@ -564,9 +568,14 @@ def _prepare_intel_builds(platform: dict, requested: set, dry_run: bool) -> dict
         packages = list(dict.fromkeys([*deps, *formulas]))
         if len(packages) > 60 or any(not re.fullmatch(r"[A-Za-z0-9@+_.-]+", item) for item in packages):
             raise ValueError("Unexpected or excessive Homebrew dependency list; refusing source builds")
+        inventory = subprocess.check_output(["brew", "list", "--formula", "--versions"], text=True, timeout=30)
+        installed = {line.split()[0] for line in inventory.splitlines() if line.split()}
+        # Don't request upgrades to installed dependencies. Homebrew may still
+        # require newer dependencies for the requested formula's source build.
+        packages = [name for name in packages if name not in installed or name in formulas]
         command = ["brew", "install", "--build-from-source", *packages]
         print(shlex.join(command), file=sys.stderr, flush=True)
-        result = _run_native(command, "brew", True)
+        result = _run_native(command, "brew", True, timeout=3600)
         return _result("intel-build", "installed" if result.returncode == 0 else "failed", f"Explicit Homebrew dependency build exited {result.returncode}", ownership="brew" if result.returncode == 0 else None)
     except (OSError, subprocess.SubprocessError, ValueError) as exc:
         return _result("intel-build", "failed", f"Explicit native build failed: {exc}")

@@ -7,7 +7,7 @@ These checks require a real host session. A unit test or successful package comm
 - [ ] On each supported distribution and architecture, run `./install.sh --dry-run`, then install as a normal user and review the receipt with `terminal-kit doctor`.
 - [ ] Confirm Neovim opens, LazyVim restores from the recorded lock, and expected language tooling starts.
 - [ ] Confirm Pi, Hermes, and OpenCode launch without authentication being initiated automatically; configure provider login only when wanted.
-- [x] Debian 12 x86_64: explicit `treesitter-build` installed pinned CLI 0.26.1; parsers/LSPs, agents, doctor, rollback and uninstall passed after recovering from an interrupted installation. A separate clean default-profile CI check still confirms that omitting the opt-in reports partial Tree-sitter availability honestly.
+- [x] Debian 12 x86_64: explicit `treesitter-build` installed pinned CLI 0.26.1; parsers/LSPs, agents, doctor, rollback and uninstall passed after recovering from an interrupted installation. An earlier real default-profile CI run confirmed that omitting the opt-in reports partial Tree-sitter availability honestly.
 - [ ] On Ubuntu 22.04 and other older-glibc hosts, exercise `treesitter-build`; verify the pinned source build uses isolated mise Rust and leaves system libraries unchanged.
 - [ ] Disconnect SSH with a named tmux session attached, reconnect, and verify it remains while the machine is running. Reboot behavior is intentionally not persistence.
 - [ ] Verify rollback restores a changed managed config and uninstall restores pre-existing files without removing agent data or shared packages.

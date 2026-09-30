@@ -33,6 +33,9 @@ if [ -n "$tk_brew" ]; then
   tk_prefix=$("$tk_brew" --prefix)
   export PATH="$tk_prefix/bin:$tk_prefix/sbin:$PATH"
   export HOMEBREW_NO_AUTO_UPDATE=1
+  export HOMEBREW_NO_INSTALL_UPGRADE=1
+  export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
+  export HOMEBREW_NO_INSTALL_CLEANUP=1
 fi
 if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import sys; sys.exit(sys.version_info < (3,9))' 2>/dev/null; then
   if [ "$tk_dry" -eq 1 ]; then

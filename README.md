@@ -16,7 +16,7 @@ The normal headless and workstation setups include the editor, shell and tmux co
 
 The installer needs Python 3.9+ and Bash 4+. Linux package operations use the native package manager and normal sudo authorization. On macOS, Apple’s stock Bash 3.2 can run the installer. If Homebrew is absent, the installer downloads the official Homebrew installer at a pinned commit, verifies its SHA-256, then runs it; Homebrew may request OS authorization or Command Line Tools and needs an interactive terminal. `--unattended` can fail when these steps need human authorization. Supported OS versions and platform-specific gaps are in [Support](docs/SUPPORT.md).
 
-**Intel Mac:** add `--with intel-build`. Current Homebrew lacks Intel bottles for tmux/btop, and Hermes's security-pinned cryptography dependency lacks an Intel wheel. This explicit option builds the native dependencies and uses isolated Rust 1.92.0 for Hermes. Allow 20–60 minutes and several hundred MiB. Without it, missing required components produce a partial-install status; Apple Silicon does not need this option.
+**Intel Mac:** add `--with intel-build`. Current Homebrew lacks Intel bottles for tmux/btop, and Hermes's security-pinned cryptography dependency lacks an Intel wheel. This explicit option builds the native dependencies and uses isolated Rust 1.92.0 for Hermes. Allow 20–90 minutes and several hundred MiB. Without it, missing required components produce a partial-install status; Apple Silicon does not need this option.
 
 ## One-command private installation
 
