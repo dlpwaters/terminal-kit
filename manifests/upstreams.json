@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-09-30",
+  "purpose": "Audited upstream references for Terminal Kit required profiles, editor baseline, and optional host-compatible build tools.",
+  "profiles": {
+    "headless": {
+      "required": [
+        "cli",
+        "runtimes",
+        "agents",
+        "configs",
+        "nvim"
+      ],
+      "agents": [
+        "pi",
+        "hermes",
+        "opencode"
+      ],
+      "authentication": "User-managed and may remain pending after install."
+    },
+    "workstation": {
+      "required": [
+        "cli",
+        "runtimes",
+        "agents",
+        "configs",
+        "nvim",
+        "ghostty",
+        "fonts"
+      ],
+      "agents": [
+        "pi",
+        "hermes",
+        "opencode"
+      ],
+      "authentication": "User-managed and may remain pending after install.",
+      "platform_gaps": "Ghostty has no native Windows app and this installer has limited native Linux package support; WSL Nerd Font installation targets the Windows host explicitly."
+    }
+  },
+  "pending_optional_extras": [],
+  "omitted_unverified_tools": [
+    "herdr"
+  ],
+  "upstreams": [
+    {
+      "name": "omarchy",
+      "role": "baseline-reference",
+      "repository": "https://github.com/omacom/omarchy",
+      "version": "v4.0.4",
+      "commit": "c668141e9c42b13c80c9ca4ea108e11708c5e8a5",
+      "license": "MIT",
+      "inspection": [
+        "manual/",
+        "default/bash/",
+        "config/",
+        "install/omarchy-base.packages",
+        "themes/",
+        "terminal configs",
+        "user installer",
+        "agent launchers"
+      ],
+      "decision": "Adapt portable terminal behavior only; omit Omarchy desktop runtime, machine provisioning and agent skills."
+    },
+    {
+      "name": "omarchy-nvim-package",
+      "role": "editor-config-provenance",
+      "repository": "https://github.com/omacom-io/omarchy-pkgs",
+      "path": "pkgbuilds/omarchy-nvim",
+      "commit": "f20649b0a41ccc700e41d8a1d402b337a0f75cd4",
+      "files": {
+        "PKGBUILD": "d8f64148de9e672f52c8301c1df21088416e7458",
+        ".omarchy/package.json": "2a9719d3fbb0a9054048dda881eae277703d01e2",
+        "lazyvim.json": "71fc832519cfe690624c451495bad1d79097f0e4"
+      },
+      "package_version": "2026.8.13-1",
+      "license_metadata": "MIT (PKGBUILD); bundled Starter and plugin files carry their own notices, including Apache-2.0",
+      "declared_dependencies": [
+        "neovim>=0.9.0",
+        "git"
+      ],
+      "declared_build_dependencies": [
+        "git",
+        "nodejs",
+        "npm",
+        "tree-sitter-cli"
+      ],
+      "verified_build_environment": {
+        "neovim": "0.12.4-1",
+        "nodejs": "26.7.0-1",
+        "npm": "12.0.2-1",
+        "tree-sitter-cli": "0.26.9-1",
+        "git": "2.55.0-1"
+      },
+      "verified_artifact": {
+        "url": "https://pkgs.omarchy.org/stable/x86_64/omarchy-nvim-2026.8.13-1-any.pkg.tar.zst",
+        "sha256": "ff7cca4d58198ef6ea0c16ff93bd0369b307a40fae4ed300f6a2a75bb444fe1f",
+        "buildinfo_pkgbuild_sha256": "c91107a63b402fd58c1a614fe67e2d9c8f9fe5da2638233b3eccbbd126c4b106",
+        "source_pkgbuild_sha256": "c91107a63b402fd58c1a614fe67e2d9c8f9fe5da2638233b3eccbbd126c4b106",
+        "embedded_lazy_lock_sha256": "f8693f2607088055adef508221e288b378a8df97411e0d726cbdb672d963a8ca"
+      },
+      "decision": "Separate Omarchy-maintained package recipe. Not pinned by Omarchy v4.0.4. The June 2026 recipe commit is pkgver 2026.6.17 and is not the source for this August artifact. Use the verified August artifact and lock as config/plugin provenance; Terminal Kit adapts selected files and pins its own plugin restore. Do not copy the full generated cache or overwrite existing user configuration.",
+      "build_input": {
+        "name": "LazyVim Starter",
+        "repository": "https://github.com/LazyVim/starter",
+        "ref": "main archive",
+        "sha256": "d865d50211358358d3c3c1e356773c1e3de1e8964215d85eb1b4c77521e17488",
+        "note": "Recipe hashes the moving main archive; this checksum identifies the inspected archive but does not make the recipe commit-pinned."
+      }
+    },
+    {
+      "name": "neovim",
+      "role": "required-editor",
+      "repository": "https://github.com/neovim/neovim",
+      "version": "v0.12.5",
+      "commit": "5885a30e1e1225349079e7a1c4a3848aa8e43e42",
+      "license": "Apache-2.0, with some Vim-licensed portions",
+      "decision": "Required in both headless and workstation profiles; terminal-kit pins the official release asset. The v0.12.4 value elsewhere is the Omarchy package's recorded build environment, not this runtime pin."
+    },
+    {
+      "name": "tree-sitter-cli",
+      "role": "required-editor-parser-cli-with-explicit-source-fallback",
+      "repository": "https://github.com/tree-sitter/tree-sitter",
+      "version": "v0.26.1",
+      "commit": "8a3dcc6155a9faae677544303b6bc0caf1aef296",
+      "license": "MIT",
+      "source_archive": {
+        "url": "https://codeload.github.com/tree-sitter/tree-sitter/tar.gz/8a3dcc6155a9faae677544303b6bc0caf1aef296",
+        "sha256": "ca739fcb6fdb9cf2312d687332282040f088ea5c517a65ea98f980a861babc27"
+      },
+      "source_build": {
+        "module": "treesitter-build",
+        "rust_version": "1.92.0",
+        "cargo": "cargo install --locked --path crates/cli --root <staging> --bin tree-sitter --jobs 2",
+        "native_prerequisites": {
+          "apt": "libclang-dev",
+          "dnf": "clang-devel",
+          "pacman": "clang",
+          "brew": "llvm"
+        },
+        "isolation": "mise Rust, Cargo home, Rustup home and Cargo target remain under Terminal Kit managed runtime storage; no core system library updates.",
+        "license_handling": "MIT and Apache license files are copied from source beside the installed binary; no upstream source is vendored."
+      },
+      "official_binary_assets": {
+        "linux-x86_64": {
+          "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-linux-x64.gz",
+          "sha256": "d74182fffbf441f247371ad6af77d99b10ac9f788d7e068e4b44992d9d6d7c26"
+        },
+        "linux-aarch64": {
+          "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-linux-arm64.gz",
+          "sha256": "98a710e8ab9d502c50b02acd32d553c5fb5d00285cd458e5907af8a580c5a4ea"
+        },
+        "macos-x86_64": {
+          "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-macos-x64.gz",
+          "sha256": "2162760bd371b4157b26b363550d5dacbfefc359fa85e6e9ac4b31e9e717add8"
+        },
+        "macos-aarch64": {
+          "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-macos-arm64.gz",
+          "sha256": "823254eac2a9d006ed03a74181265249cdaf597b17bd808adc63610c447bb0bf"
+        }
+      },
+      "decision": "Use verified official binary when runtime-compatible. On older glibc or when binary install fails, the explicitly selected treesitter-build module compiles pinned source; it does not silently trigger expensive source compilation."
+    },
+    {
+      "name": "LazyVim",
+      "role": "required-editor-config-reference",
+      "repository": "https://github.com/LazyVim/LazyVim",
+      "version": "v16.0.1",
+      "commit": "999700997f72227187d49d8b92667183dc7fc809",
+      "license": "Apache-2.0",
+      "decision": "Reference only. The package uses LazyVim Starter and package-owned changes; do not claim the package is an unmodified LazyVim release. The portable lock adds pinned SchemaStore.nvim and venv-selector.nvim commits; all original baseline plugin commits are unchanged.",
+      "lock_adaptations": [
+        "SchemaStore.nvim@5553e77b8628b7a08fc2a5135c17647f11d828ee",
+        "venv-selector.nvim@cc4bb3975de8835291f9bb45889e96c6b2795fc4"
+      ]
+    },
+    {
+      "name": "SchemaStore.nvim",
+      "role": "editor-plugin-added-to-portable-lock",
+      "repository": "https://github.com/b0o/SchemaStore.nvim",
+      "branch": "main",
+      "commit": "5553e77b8628b7a08fc2a5135c17647f11d828ee",
+      "license": "MIT",
+      "decision": "Explicit portable addition to the Omarchy-derived LazyVim lock; original baseline plugin commits remain unchanged."
+    },
+    {
+      "name": "venv-selector.nvim",
+      "role": "editor-plugin-added-to-portable-lock",
+      "repository": "https://github.com/linux-cultist/venv-selector.nvim",
+      "branch": "main",
+      "commit": "cc4bb3975de8835291f9bb45889e96c6b2795fc4",
+      "license": "MIT",
+      "decision": "Explicit portable addition to the Omarchy-derived LazyVim lock; original baseline plugin commits remain unchanged."
+    },
+    {
+      "name": "tmux",
+      "role": "required-multiplexer",
+      "repository": "https://github.com/tmux/tmux",
+      "version": "3.7c",
+      "commit": "e476c1230b958df0cb12977517d24b3dc931375b",
+      "license": "ISC",
+      "decision": "Include; configuration adapted from the inspected Omarchy defaults."
+    },
+    {
+      "name": "ghostty",
+      "role": "workstation-terminal-emulator",
+      "repository": "https://github.com/ghostty-org/ghostty",
+      "version": "v1.3.1",
+      "commit": "332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28",
+      "license": "MIT",
+      "decision": "Workstation default. Install through supported OS-native package sources; unsupported distro/Windows GUI cases are reported, with no community repository added automatically. Headless omits it."
+    },
+    {
+      "name": "fzf",
+      "role": "required-cli",
+      "repository": "https://github.com/junegunn/fzf",
+      "version": "v0.74.4",
+      "commit": "a140afeb4d733cad3c96a56bf6db7e26853b6757",
+      "license": "MIT",
+      "decision": "Include; shell integration is conditional."
+    },
+    {
+      "name": "ripgrep",
+      "role": "required-cli",
+      "repository": "https://github.com/BurntSushi/ripgrep",
+      "version": null,
+      "commit": null,
+      "license": "MIT/Unlicense",
+      "decision": "Include via distribution package; release commit not captured in this audit's fetched metadata. Resolve to a package checksum or source commit before vendoring."
+    },
+    {
+      "name": "zoxide",
+      "role": "required-cli",
+      "repository": "https://github.com/ajeetdsouza/zoxide",
+      "version": "v0.10.0",
+      "commit": "f84f9a3e1d16fabf3e34b199ec7d552993b41f29",
+      "license": "MIT",
+      "decision": "Include; shell initialization is conditional."
+    },
+    {
+      "name": "eza",
+      "role": "required-cli",
+      "repository": "https://github.com/eza-community/eza",
+      "version": "v0.23.5",
+      "commit": "98442ab17c2c3738701b62a7e060b1431ae2d6ea",
+      "license": "MIT",
+      "decision": "Include with plain ls fallback."
+    },
+    {
+      "name": "starship",
+      "role": "required-prompt",
+      "repository": "https://github.com/starship/starship",
+      "version": "v1.26.0",
+      "commit": "fca92d8dcbd5981b0160af2f7ed7a430b6475a72",
+      "license": "ISC",
+      "decision": "Include/adapt; shell-specific initialization."
+    },
+    {
+      "name": "mise",
+      "role": "required-tool-manager",
+      "repository": "https://github.com/jdx/mise",
+      "version": "v2026.9.18",
+      "commit": "2184db810a7e2c29475abdba53e5af910e96859a",
+      "license": "MIT",
+      "decision": "Include; use explicit project versions and normal configuration trust behavior."
+    },
+    {
+      "name": "homebrew-installer",
+      "role": "macos-prerequisite-bootstrap",
+      "repository": "https://github.com/Homebrew/install",
+      "version": "pinned-commit",
+      "commit": "f6632bc2e9afc0ba20cdee1f2d28bcd7672b3245",
+      "source_url": "https://raw.githubusercontent.com/Homebrew/install/f6632bc2e9afc0ba20cdee1f2d28bcd7672b3245/install.sh",
+      "sha256": "fa4ed743b4ca38316c8f32fd6623baa5bbb928fd4a47ad9f49c2be78ea833449",
+      "license": "BSD-2-Clause",
+      "decision": "When macOS has no Homebrew, the stock Bash-compatible helper fetches this official installer and verifies the exact SHA-256 before execution. The official installer may need Command Line Tools, OS authorization, or interactive terminal access; unattended setup can stop for a human prerequisite."
+    },
+    {
+      "name": "uv",
+      "role": "optional-python-tool",
+      "repository": "https://github.com/astral-sh/uv",
+      "version": "0.12.21",
+      "commit": "7af826859382eb191e47467540850caa8f493e5b",
+      "license": "MIT/Apache-2.0",
+      "decision": "Optional Python tooling."
+    },
+    {
+      "name": "lazygit",
+      "role": "required-git-ui",
+      "repository": "https://github.com/jesseduffield/lazygit",
+      "version": "v0.65.1",
+      "commit": "17cb09fa7b08bc96d9f0e81b91f4720fc1a36700",
+      "license": "MIT",
+      "decision": "Required in headless and workstation profiles; Git is required."
+    },
+    {
+      "name": "lazydocker",
+      "role": "required-container-ui",
+      "repository": "https://github.com/jesseduffield/lazydocker",
+      "version": "v0.25.2",
+      "commit": "7e7aadc2071d58031bf2daafca1fbd4093efc23f",
+      "license": "MIT",
+      "decision": "Required client in both profiles. Docker Engine/service remains a separate user opt-in; this client install does not provision or start a daemon."
+    },
+    {
+      "name": "nerd-fonts",
+      "role": "workstation-font",
+      "repository": "https://github.com/ryanoasis/nerd-fonts",
+      "version": "v3.5.1",
+      "commit": "b894ea7803af6aade63d60a4381e006098ec9c4d",
+      "license": "SIL Open Font License 1.1",
+      "decision": "Workstation default. Download the pinned official release and preserve its LICENSE/notices. WSL must install the font in the Windows host explicitly. Headless omits it."
+    },
+    {
+      "name": "opencode",
+      "role": "required-agent-cli",
+      "repository": "https://github.com/anomalyco/opencode",
+      "version": "v1.18.33",
+      "commit": "1eacc1bdb919bc54fc1c9f745b0da02e83ebbdf9",
+      "cli_version": "1.18.33",
+      "license": "MIT",
+      "decision": "Required client in both profiles; installation does not authenticate. No Omarchy policy, skills or launch flags are copied.",
+      "shell_selection": {
+        "source": "https://github.com/anomalyco/opencode/blob/v1.18.33/packages/core/src/shell.ts",
+        "behavior": "Pinned OpenCode resolves the shell from process.env.SHELL; Terminal Kit exports its detected Bash path for interactive shells."
+      }
+    },
+    {
+      "name": "pi-coding-agent",
+      "role": "required-agent-cli",
+      "repository": "https://github.com/earendil-works/pi",
+      "version": "v0.99.1",
+      "commit": "d86654abb8862e201933517d6f1fce9f88dd117f",
+      "license": "MIT",
+      "runtime": "Node.js >=22.19.0 (from @earendil-works/pi-coding-agent package metadata)",
+      "decision": "Required client in both profiles; pinned mise-managed Node/npm satisfies package engine. Installation does not authenticate."
+    },
+    {
+      "name": "hermes-agent",
+      "role": "required-agent-cli",
+      "repository": "https://github.com/NousResearch/hermes-agent",
+      "version": "v2026.9.24",
+      "commit": "f97608f178d1ffeca59860195ab7da295f7c8e5f",
+      "license": "MIT",
+      "cli_version": "0.21.5",
+      "python_range": ">=3.11,<3.14",
+      "python_tested": "3.11.2 on the Debian integration host",
+      "installer_stages": [
+        "repository",
+        "venv",
+        "python-deps",
+        "node-deps",
+        "path",
+        "complete"
+      ],
+      "excluded_stages": [
+        "setup",
+        "gateway",
+        "browser/Playwright",
+        "computer-use/cua-driver"
+      ],
+      "decision": "Required client in both profiles; use the pinned official staged installer with the recorded supported Python range. Setup/authentication remains the user's action; optional browser and computer-use tooling are excluded."
+    }
+  ],
+  "licenses": {
+    "Omarchy-MIT.txt": "omacom/omarchy v4.0.4 source notice",
+    "Neovim-License.txt": "Neovim v0.12.5 combined Apache-2.0 and Vim-license notice",
+    "LazyVim-Apache-2.0.txt": "LazyVim upstream LICENSE retained for the required adapted editor baseline",
+    "LazyVim-Starter-Apache-2.0.txt": "LazyVim Starter LICENSE matching the installed package's embedded config LICENSE",
+    "Nerd-Fonts-OFL.txt": "Nerd Fonts license notice; downloaded archives also carry their own license/notices"
+  },
+  "verification": {
+    "status": "source-audited; Debian 12, Ubuntu 24.04.5, and Fedora 44 install/recovery checks passed; clean Debian 12 default profile, macOS CI, and native desktop/WSL acceptance pending",
+    "verified": [
+      "official GitHub release/tag metadata",
+      "Omarchy v4.0.4 source tree",
+      "separate omarchy-nvim recipe and official package artifact/checksum",
+      "embedded LazyVim lock hash and original plugin commits",
+      "SchemaStore.nvim and venv-selector.nvim added lock commits",
+      "Pi package Node engine",
+      "Hermes pinned staged installer and Python range",
+      "Ghostty official platform installation guidance",
+      "Debian 12 agent CLI and LSP/formatter versions",
+      "Tree-sitter 0.26.1 source commit/archive digest and isolated Rust 1.92 source build",
+      "Homebrew official installer pinned commit and SHA-256",
+      "Ubuntu 24.04.5 and Fedora 44 full install/doctor/rollback/uninstall checks",
+      "Debian 12 interrupted-install recovery and explicit Tree-sitter source-build module",
+      "Ubuntu 24.04.5 and Fedora 44 install/repeat-doctor/rollback/uninstall checks",
+      "host Python suite 74/74, container suite 73 passed and 1 Ghostty-unavailable skip, seven Bats checks, ShellCheck, Bash syntax, isolated tmux layout",
+      "Homebrew official installer pinned commit and SHA-256",
+      "OpenCode v1.18.33 shell selection from process.env.SHELL"
+    ],
+    "pending": [
+      "clean Debian 12 default-profile CI without treesitter-build opt-in",
+      "macOS CI",
+      "native GUI and Windows WSL physical acceptance",
+      "SSH disconnect/reboot physical acceptance",
+      "authentication flows (user-managed)"
+    ],
+    "known_gap": "ripgrep source commit/checksum was not captured in this audit snapshot.",
+    "tree_sitter_source_build": {
+      "version": "0.26.1",
+      "commit": "8a3dcc6155a9faae677544303b6bc0caf1aef296",
+      "archive_sha256": "ca739fcb6fdb9cf2312d687332282040f088ea5c517a65ea98f980a861babc27",
+      "rust": "1.92.0",
+      "result": "Debian 12 x86_64 build and parser/LSP checks passed",
+      "method": "cargo install --locked --jobs 2 using a mise-managed isolated Rust/Cargo environment; native libclang development headers; no system library updates"
+    },
+    "install_matrix": {
+      "debian": "Debian 12 x86_64 interrupted-install recovery, explicit Tree-sitter source build, parsers/LSPs/agents, doctor, rollback, and uninstall passed; clean default-profile CI pending",
+      "ubuntu": "Ubuntu 24.04.5 fresh install, repeat doctor, rollback, and uninstall passed",
+      "fedora": "Fedora 44 fresh install, repeat doctor, rollback, and uninstall passed"
+    }
+  },
+  "optional_extras": [
+    "tealdeer",
+    "ncdu",
+    "tree"
+  ],
+  "terminfo_snapshots": {
+    "tmux-256color": {
+      "source": "ncurses 6.6-2, infocmp -x on audit host",
+      "license": "MIT",
+      "path": "configs/terminfo/tmux-256color.terminfo"
+    },
+    "xterm-ghostty": {
+      "source": "Ghostty 1.3.1-arch2 official Arch package, infocmp -x on audit host",
+      "license": "MIT",
+      "path": "configs/terminfo/xterm-ghostty.terminfo"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# Portable environment shared by login and interactive Bash.
+export EDITOR="${EDITOR:-nvim}"
+export VISUAL="${VISUAL:-$EDITOR}"
+export PAGER="${PAGER:-less -FRX}"
+export LESS="${LESS:--R}"
+_terminal_kit_root="$HOME/.local/share/terminal-kit"
+for _terminal_kit_path in "$HOME/.local/bin" "$_terminal_kit_root/bin"; do
+  case ":$PATH:" in
+    *":$_terminal_kit_path:"*) ;;
+    *) PATH="$_terminal_kit_path${PATH:+:$PATH}" ;;
+  esac
+done
+export PATH
+unset _terminal_kit_root _terminal_kit_path

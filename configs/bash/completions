@@ -1,0 +1,8 @@
+# Bash completion package location discovered by terminal-kit at install time.
+if [[ -r @BASH_COMPLETION_FILE@ ]]; then
+  source @BASH_COMPLETION_FILE@
+elif [[ -n ${BASH_COMPLETION_COMPAT_DIR:-} && -r "$BASH_COMPLETION_COMPAT_DIR/bash_completion" ]]; then
+  source "$BASH_COMPLETION_COMPAT_DIR/bash_completion"
+elif [[ -r /usr/share/bash-completion/bash_completion ]]; then
+  source /usr/share/bash-completion/bash_completion
+fi

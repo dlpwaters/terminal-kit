@@ -1,0 +1,37 @@
+name: Check
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verification prerequisites
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install bash shellcheck bats-core tmux
+            echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
+          else
+            sudo apt-get update
+            sudo apt-get install -y shellcheck bats tmux
+          fi
+      - name: Isolated checks
+        shell: bash
+        run: ./scripts/check.sh
+  linux-install:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [debian:12, ubuntu:24.04]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: docker build --build-arg BASE='${{ matrix.distro }}' -f tests/containers/Dockerfile -t terminal-kit-test .
+      - run: docker run --rm terminal-kit-test

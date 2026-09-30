@@ -1,0 +1,28 @@
+name: Platform acceptance
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  mac-cli-install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Headless install in isolated HOME
+        shell: bash
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+        run: |
+          export HOME="$(mktemp -d "$RUNNER_TEMP/terminal-kit-home.XXXXXX")"
+          ./install.sh --profile headless --unattended
+          export PATH="$HOME/.local/share/terminal-kit/bin:$HOME/.local/bin:$PATH"
+          terminal-kit doctor
+          pi --version
+          hermes --version
+          opencode --version
+          nvim --headless '+lua assert(require("lazy.core.config").plugins.LazyVim)' +qa
+          terminal-kit uninstall

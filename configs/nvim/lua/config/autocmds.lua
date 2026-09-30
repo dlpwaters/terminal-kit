@@ -1,0 +1,1 @@
+-- User autocmds belong in ~/.config/terminal-kit/local/nvim.lua.

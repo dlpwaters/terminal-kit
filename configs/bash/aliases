@@ -1,0 +1,23 @@
+# Small, portable aliases. Optional tools are checked at invocation time.
+alias d='docker'
+alias r='rails'
+alias c='opencode'
+n() { if [[ $# -eq 0 ]]; then command nvim .; else command nvim "$@"; fi; }
+alias t='terminal-kit layout sessions new Work'
+alias gcm='git commit -m'
+alias gcam='git commit -a -m'
+compress() {
+  [[ $# -eq 1 && -e $1 ]] || { printf 'Usage: compress PATH\n' >&2; return 2; }
+  local source=${1%/} archive=${1%/}.tar.gz
+  [[ ! -e $archive ]] || { printf 'Archive already exists: %s\n' "$archive" >&2; return 2; }
+  tar -czf "$archive" -- "$source"
+}
+decompress() { tar -xzf "$@"; }
+ga() {
+  [[ $# -eq 1 ]] || { printf 'Usage: ga BRANCH\n' >&2; return 2; }
+  git check-ref-format --branch "$1" >/dev/null || return
+  local root branch=$1 target
+  root=$(git rev-parse --show-toplevel) || return
+  target="${root}--${branch//\//-}"
+  git worktree add -b "$branch" "$target" && builtin cd "$target"
+}

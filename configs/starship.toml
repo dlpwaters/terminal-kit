@@ -1,0 +1,14 @@
+# Portable, quiet prompt defaults. Customize in ~/.config/terminal-kit/local/starship.toml.
+add_newline = false
+command_timeout = 1000
+format = "$directory$git_branch$git_status$character"
+[directory]
+truncation_length = 3
+style = "bold blue"
+[git_branch]
+style = "bold purple"
+[git_status]
+style = "yellow"
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"

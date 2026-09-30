@@ -1,0 +1,11 @@
+FROM fedora:44
+RUN dnf install -y python3 sudo curl git tar gzip xz unzip bash coreutils shellcheck bats tmux shadow-utils \
+    && useradd -m -s /bin/bash tester \
+    && printf 'tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/tester \
+    && chmod 0440 /etc/sudoers.d/tester
+COPY --chown=tester:tester . /opt/terminal-kit
+USER tester
+ENV HOME=/home/tester
+ENV PATH=/usr/local/bin:/usr/bin:/bin
+WORKDIR /opt/terminal-kit
+CMD ["bash", "tests/containers/acceptance.sh"]

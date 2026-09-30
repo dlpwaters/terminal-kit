@@ -1,0 +1,457 @@
+{
+  "schema": 1,
+  "audit_date": "2026-09-30",
+  "policy": "Use distro repositories for system prerequisites. Install user binaries in the terminal-kit owned prefix after SHA-256 verification. Never run a system-wide upgrade.",
+  "minimum_versions": {
+    "bash": "4.0",
+    "git": "2.30",
+    "gh": "2.0",
+    "nvim": "0.12.0",
+    "tmux": "3.2",
+    "fzf": "0.48",
+    "node": "22.19",
+    "eza": "0.18.0",
+    "zoxide": "0.9.0",
+    "starship": "1.18.0",
+    "lazygit": "0.40.0",
+    "lazydocker": "0.20.0"
+  },
+  "packages": {
+    "apt": [
+      "bash",
+      "git",
+      "bash-completion",
+      "gh",
+      "tmux",
+      "ripgrep",
+      "fd-find",
+      "bat",
+      "btop",
+      "jq",
+      "curl",
+      "tar",
+      "unzip",
+      "build-essential",
+      "pkg-config",
+      "fzf",
+      "zoxide",
+      "ncurses-bin"
+    ],
+    "dnf": [
+      "bash",
+      "git",
+      "bash-completion",
+      "gh",
+      "tmux",
+      "ripgrep",
+      "fd-find",
+      "bat",
+      "btop",
+      "jq",
+      "curl",
+      "tar",
+      "unzip",
+      "gcc",
+      "gcc-c++",
+      "make",
+      "pkgconf-pkg-config",
+      "eza",
+      "fzf",
+      "zoxide",
+      "starship",
+      "lazygit",
+      "neovim",
+      "ncurses"
+    ],
+    "pacman": [
+      "bash",
+      "git",
+      "bash-completion",
+      "github-cli",
+      "tmux",
+      "ripgrep",
+      "fd",
+      "bat",
+      "btop",
+      "jq",
+      "curl",
+      "tar",
+      "unzip",
+      "base-devel",
+      "pkgconf",
+      "eza",
+      "fzf",
+      "zoxide",
+      "starship",
+      "lazygit",
+      "lazydocker",
+      "neovim",
+      "ncurses"
+    ],
+    "brew": [
+      "bash",
+      "git",
+      "bash-completion@2",
+      "gh",
+      "tmux",
+      "ripgrep",
+      "fd",
+      "bat",
+      "btop",
+      "jq",
+      "curl",
+      "gnu-tar",
+      "unzip",
+      "eza",
+      "fzf",
+      "zoxide",
+      "starship",
+      "lazygit",
+      "lazydocker",
+      "neovim",
+      "ncurses"
+    ]
+  },
+  "releases": {
+    "neovim": {
+      "version": "v0.12.5",
+      "repo": "neovim/neovim",
+      "assets": {
+        "linux-x86_64": {
+          "name": "nvim-linux-x86_64.tar.gz",
+          "url": "https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-x86_64.tar.gz",
+          "sha256": "bce0f56eda1f1b1db6eee8f4133d7a38813ea07933837dd1777411ca384c6875"
+        },
+        "macos-x86_64": {
+          "name": "nvim-macos-x86_64.tar.gz",
+          "url": "https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-macos-x86_64.tar.gz",
+          "sha256": "81f4518622cb059b450ee2e498c6a1082a222f6bd89589de5bbcf0c6a68aa3fd"
+        },
+        "macos-aarch64": {
+          "name": "nvim-macos-arm64.tar.gz",
+          "url": "https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-macos-arm64.tar.gz",
+          "sha256": "65fb000099e47ca1b762584c484cc833f40e30851a0ec450d4174e16317c1f9b"
+        },
+        "linux-aarch64": {
+          "name": "nvim-linux-arm64.tar.gz",
+          "url": "https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-arm64.tar.gz",
+          "sha256": "1aa5ca085249580ae0f91eb14f27ec0919773ff2d99a163d03f3d6c21ac29725"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "nvim-linux-x86_64/bin/nvim",
+        "macos-x86_64": "nvim-macos-x86_64/bin/nvim",
+        "macos-aarch64": "nvim-macos-arm64/bin/nvim",
+        "linux-aarch64": "nvim-linux-arm64/bin/nvim"
+      }
+    },
+    "fzf": {
+      "version": "v0.74.4",
+      "repo": "junegunn/fzf",
+      "assets": {
+        "linux-x86_64": {
+          "name": "fzf-0.74.4-linux_amd64.tar.gz",
+          "url": "https://github.com/junegunn/fzf/releases/download/v0.74.4/fzf-0.74.4-linux_amd64.tar.gz",
+          "sha256": "05e6813a337cc722c3ed07e54a764b75cc5d671e2e60459db0ba696ee5fa7504"
+        },
+        "macos-x86_64": {
+          "name": "fzf-0.74.4-darwin_amd64.tar.gz",
+          "url": "https://github.com/junegunn/fzf/releases/download/v0.74.4/fzf-0.74.4-darwin_amd64.tar.gz",
+          "sha256": "2d392b50be66e2ab104ccd52a6072df692b1f9b9c5b449a9c098de885f32c4c5"
+        },
+        "macos-aarch64": {
+          "name": "fzf-0.74.4-darwin_arm64.tar.gz",
+          "url": "https://github.com/junegunn/fzf/releases/download/v0.74.4/fzf-0.74.4-darwin_arm64.tar.gz",
+          "sha256": "4f6a113bfc0c7959e0005c78d566a51afc4fcefc956f43735c62a9deb19e92ae"
+        },
+        "linux-aarch64": {
+          "name": "fzf-0.74.4-linux_arm64.tar.gz",
+          "url": "https://github.com/junegunn/fzf/releases/download/v0.74.4/fzf-0.74.4-linux_arm64.tar.gz",
+          "sha256": "5d673b849f494f0d64ec471d8640b153ca8849e3846a31da17abdcfce8df6b46"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "fzf",
+        "macos-x86_64": "fzf",
+        "macos-aarch64": "fzf",
+        "linux-aarch64": "fzf"
+      }
+    },
+    "eza": {
+      "version": "v0.23.5",
+      "repo": "eza-community/eza",
+      "assets": {
+        "linux-x86_64": {
+          "name": "eza_x86_64-unknown-linux-gnu.tar.gz",
+          "url": "https://github.com/eza-community/eza/releases/download/v0.23.5/eza_x86_64-unknown-linux-gnu.tar.gz",
+          "sha256": "35c70c5c43c29108075e58b893234c67ef585f0b53a7eaf8e9e7d4eec9f339b4"
+        },
+        "linux-aarch64": {
+          "name": "eza_aarch64-unknown-linux-gnu.tar.gz",
+          "url": "https://github.com/eza-community/eza/releases/download/v0.23.5/eza_aarch64-unknown-linux-gnu.tar.gz",
+          "sha256": "40b87ae8628aa2ff0f0d2dc24ab52f689631366385c3da630bae745671fd71ec"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "eza",
+        "linux-aarch64": "eza"
+      }
+    },
+    "zoxide": {
+      "version": "v0.10.0",
+      "repo": "ajeetdsouza/zoxide",
+      "assets": {
+        "linux-x86_64": {
+          "name": "zoxide-0.10.0-x86_64-unknown-linux-musl.tar.gz",
+          "url": "https://github.com/ajeetdsouza/zoxide/releases/download/v0.10.0/zoxide-0.10.0-x86_64-unknown-linux-musl.tar.gz",
+          "sha256": "2d93385b99f3e82cf2701609a1bffcad863fbeb75aa3fe7eb6be4d29be68b1ae"
+        },
+        "macos-x86_64": {
+          "name": "zoxide-0.10.0-x86_64-apple-darwin.tar.gz",
+          "url": "https://github.com/ajeetdsouza/zoxide/releases/download/v0.10.0/zoxide-0.10.0-x86_64-apple-darwin.tar.gz",
+          "sha256": "18ab7ae2633ad6e2ab79a4e665cbba1e95b7c872d44523326efb793202451dad"
+        },
+        "macos-aarch64": {
+          "name": "zoxide-0.10.0-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/ajeetdsouza/zoxide/releases/download/v0.10.0/zoxide-0.10.0-aarch64-apple-darwin.tar.gz",
+          "sha256": "b55ae6f2f5f23d0a6ccb3bd4eeb2af9c7e0a6556e5255c82100e40305129bbb0"
+        },
+        "linux-aarch64": {
+          "name": "zoxide-0.10.0-aarch64-unknown-linux-musl.tar.gz",
+          "url": "https://github.com/ajeetdsouza/zoxide/releases/download/v0.10.0/zoxide-0.10.0-aarch64-unknown-linux-musl.tar.gz",
+          "sha256": "f1f16c5d6298d63dee467eedea1cdcd8490e43e493bea43acd416dc9033ef641"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "zoxide",
+        "macos-x86_64": "zoxide",
+        "macos-aarch64": "zoxide",
+        "linux-aarch64": "zoxide"
+      }
+    },
+    "starship": {
+      "version": "v1.26.0",
+      "repo": "starship/starship",
+      "assets": {
+        "linux-x86_64": {
+          "name": "starship-x86_64-unknown-linux-gnu.tar.gz",
+          "url": "https://github.com/starship/starship/releases/download/v1.26.0/starship-x86_64-unknown-linux-gnu.tar.gz",
+          "sha256": "321f0dd7af8340a5f2e6a8fec6538a04f617486f9ec70d878f91c09cd8deef22"
+        },
+        "macos-x86_64": {
+          "name": "starship-x86_64-apple-darwin.tar.gz",
+          "url": "https://github.com/starship/starship/releases/download/v1.26.0/starship-x86_64-apple-darwin.tar.gz",
+          "sha256": "5548f406a4b6f5695903bdea83f77ce47ec12c8c0e62dabd33122d8f133e4207"
+        },
+        "macos-aarch64": {
+          "name": "starship-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/starship/starship/releases/download/v1.26.0/starship-aarch64-apple-darwin.tar.gz",
+          "sha256": "c40b27b11f580411e068f2fa6c1be7830a387c0bc47a94d1d37f32b054c5361d"
+        },
+        "linux-aarch64": {
+          "name": "starship-aarch64-unknown-linux-musl.tar.gz",
+          "url": "https://github.com/starship/starship/releases/download/v1.26.0/starship-aarch64-unknown-linux-musl.tar.gz",
+          "sha256": "dc30189378d2f2e287384e8a692d3f95ad1df64cf0e8c36aa9201516028aed6b"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "starship",
+        "macos-x86_64": "starship",
+        "macos-aarch64": "starship",
+        "linux-aarch64": "starship"
+      }
+    },
+    "lazygit": {
+      "version": "v0.65.1",
+      "repo": "jesseduffield/lazygit",
+      "assets": {
+        "linux-x86_64": {
+          "name": "lazygit_0.65.1_linux_x86_64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.65.1/lazygit_0.65.1_linux_x86_64.tar.gz",
+          "sha256": "02beacbcda0fa342e50ae3480ba8147307353af3fb28e1d5f790e02329c201a6"
+        },
+        "macos-x86_64": {
+          "name": "lazygit_0.65.1_darwin_x86_64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.65.1/lazygit_0.65.1_darwin_x86_64.tar.gz",
+          "sha256": "fde13daf583511aa24c42ca154911643231a5af784c7cdd8117264b2fc035b33"
+        },
+        "macos-aarch64": {
+          "name": "lazygit_0.65.1_darwin_arm64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.65.1/lazygit_0.65.1_darwin_arm64.tar.gz",
+          "sha256": "65a367c6ea9a88efebaaf7998a6835eedb987e04916cef677264ff9b31b1b13e"
+        },
+        "linux-aarch64": {
+          "name": "lazygit_0.65.1_linux_arm64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.65.1/lazygit_0.65.1_linux_arm64.tar.gz",
+          "sha256": "49abecdf6adf4f2dfdb11bf7b9bfada267ea523612ed809d1c6d87f6c04000a7"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "lazygit",
+        "macos-x86_64": "lazygit",
+        "macos-aarch64": "lazygit",
+        "linux-aarch64": "lazygit"
+      }
+    },
+    "lazydocker": {
+      "version": "v0.25.2",
+      "repo": "jesseduffield/lazydocker",
+      "assets": {
+        "linux-x86_64": {
+          "name": "lazydocker_0.25.2_Linux_x86_64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Linux_x86_64.tar.gz",
+          "sha256": "0d9dbfc26068b218e7ed84b104748cadc6e3cf733c0afd35465306fb39b9523c"
+        },
+        "macos-x86_64": {
+          "name": "lazydocker_0.25.2_Darwin_x86_64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Darwin_x86_64.tar.gz",
+          "sha256": "af70b6e234089aa24924db25fc201d17f224e76d334e743e4595d30cf83a013b"
+        },
+        "macos-aarch64": {
+          "name": "lazydocker_0.25.2_Darwin_arm64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Darwin_arm64.tar.gz",
+          "sha256": "4a54d7b4abdf255b2bce9806641eac5568d5b7fbc820c1b5d3f9e34ea1367d60"
+        },
+        "linux-aarch64": {
+          "name": "lazydocker_0.25.2_Linux_arm64.tar.gz",
+          "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Linux_arm64.tar.gz",
+          "sha256": "005c38b685aaa557e7d646d83a3dadb5024340eeed8c6a2e1949eee6f530de23"
+        }
+      },
+      "binary_member": {
+        "linux-x86_64": "lazydocker",
+        "macos-x86_64": "lazydocker",
+        "macos-aarch64": "lazydocker",
+        "linux-aarch64": "lazydocker"
+      }
+    }
+  },
+  "mise": {
+    "version": "v2026.9.18",
+    "repo": "jdx/mise",
+    "binary_member": "mise/bin/mise",
+    "assets": {
+      "linux-x86_64": {
+        "name": "mise-v2026.9.18-linux-x64.tar.gz",
+        "url": "https://github.com/jdx/mise/releases/download/v2026.9.18/mise-v2026.9.18-linux-x64.tar.gz",
+        "sha256": "4312f8fd72a8d6a869cd2aca7444929e2a0ef6f45d2c6f2866a1eacc5bdc2e84"
+      },
+      "linux-aarch64": {
+        "name": "mise-v2026.9.18-linux-arm64.tar.gz",
+        "url": "https://github.com/jdx/mise/releases/download/v2026.9.18/mise-v2026.9.18-linux-arm64.tar.gz",
+        "sha256": "4a06b8cc295390e606b9103a29a3b49a1efba75092b05c8aca56b8367f636b37"
+      },
+      "macos-x86_64": {
+        "name": "mise-v2026.9.18-macos-x64.tar.gz",
+        "url": "https://github.com/jdx/mise/releases/download/v2026.9.18/mise-v2026.9.18-macos-x64.tar.gz",
+        "sha256": "e1fd0d0a7c93428cc4eaf61a0bdb26f0a50d4401283458c1182d3dcc6fb9b234"
+      },
+      "macos-aarch64": {
+        "name": "mise-v2026.9.18-macos-arm64.tar.gz",
+        "url": "https://github.com/jdx/mise/releases/download/v2026.9.18/mise-v2026.9.18-macos-arm64.tar.gz",
+        "sha256": "b3539de1a9823505269481b71d09a9cf86e141c63ebfc6101b3cf561766a83e8"
+      }
+    }
+  },
+  "agents": {
+    "pi": {
+      "version": "v0.99.1",
+      "package": "@earendil-works/pi-coding-agent",
+      "engine": ">=22.19.0",
+      "minimum": "0.99.1"
+    },
+    "opencode": {
+      "version": "v1.18.33",
+      "package": "opencode-ai",
+      "minimum": "1.18.33"
+    },
+    "hermes": {
+      "version": "v2026.9.24",
+      "repo": "NousResearch/hermes-agent",
+      "commit": "f97608f178d1ffeca59860195ab7da295f7c8e5f",
+      "installer_url": "https://raw.githubusercontent.com/NousResearch/hermes-agent/f97608f178d1ffeca59860195ab7da295f7c8e5f/scripts/install.sh",
+      "installer_sha256": "2017ddf0cc7bc6cfb70d40dc9fba1d916f47dbcccf5fe73bdee2cf93a11262af",
+      "cli_version": "0.21.5",
+      "minimum": "0.21.5"
+    }
+  },
+  "fonts": {
+    "jetbrains_mono": {
+      "version": "v3.5.1",
+      "asset": "JetBrainsMono.zip",
+      "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.zip",
+      "sha256": "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e"
+    }
+  },
+  "runtime_versions": {
+    "node": "26.10.0",
+    "node_minimum": "22.19.0",
+    "python": "3.13.15"
+  },
+  "extras": {
+    "apt": [
+      "tealdeer",
+      "ncdu",
+      "tree"
+    ],
+    "dnf": [
+      "tealdeer",
+      "ncdu",
+      "tree"
+    ],
+    "pacman": [
+      "tealdeer",
+      "ncdu",
+      "tree"
+    ],
+    "brew": [
+      "tealdeer",
+      "ncdu",
+      "tree"
+    ]
+  },
+  "tree_sitter_cli": {
+    "version": "0.26.1",
+    "commit": "8a3dcc6155a9faae677544303b6bc0caf1aef296",
+    "rust_version": "1.92.0",
+    "source_url": "https://codeload.github.com/tree-sitter/tree-sitter/tar.gz/8a3dcc6155a9faae677544303b6bc0caf1aef296",
+    "source_sha256": "ca739fcb6fdb9cf2312d687332282040f088ea5c517a65ea98f980a861babc27",
+    "native_packages": {
+      "dnf": "tree-sitter-cli",
+      "pacman": "tree-sitter-cli",
+      "brew": "tree-sitter"
+    },
+    "assets": {
+      "linux-x86_64": {
+        "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-linux-x64.gz",
+        "sha256": "d74182fffbf441f247371ad6af77d99b10ac9f788d7e068e4b44992d9d6d7c26"
+      },
+      "linux-aarch64": {
+        "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-linux-arm64.gz",
+        "sha256": "98a710e8ab9d502c50b02acd32d553c5fb5d00285cd458e5907af8a580c5a4ea"
+      },
+      "macos-x86_64": {
+        "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-macos-x64.gz",
+        "sha256": "2162760bd371b4157b26b363550d5dacbfefc359fa85e6e9ac4b31e9e717add8"
+      },
+      "macos-aarch64": {
+        "url": "https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.1/tree-sitter-macos-arm64.gz",
+        "sha256": "823254eac2a9d006ed03a74181265249cdaf597b17bd808adc63610c447bb0bf"
+      }
+    }
+  },
+  "clipboard_packages": {
+    "apt": {
+      "wayland": "wl-clipboard",
+      "x11": "xclip"
+    },
+    "dnf": {
+      "wayland": "wl-clipboard",
+      "x11": "xclip"
+    },
+    "pacman": {
+      "wayland": "wl-clipboard",
+      "x11": "xclip"
+    }
+  }
+}

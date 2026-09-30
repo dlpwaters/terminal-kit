@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Resolve our installed link without relying on GNU readlink -f.
+tk_path=$0
+while [ -L "$tk_path" ]; do
+  tk_dir=$(cd -P "$(dirname "$tk_path")" && pwd)
+  tk_link=$(readlink "$tk_path")
+  case "$tk_link" in /*) tk_path=$tk_link ;; *) tk_path=$tk_dir/$tk_link ;; esac
+done
+tk_root=$(cd -P "$(dirname "$tk_path")/.." && pwd)
+export PYTHONPATH="$tk_root/lib${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m terminalkit.cli "$@"
