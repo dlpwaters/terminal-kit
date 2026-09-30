@@ -470,7 +470,7 @@ class ToolTests(unittest.TestCase):
                  patch.object(tools, "_version", return_value=(spec["minimum"], str(bin_dir / "hermes"))), \
                  patch.object(tools.subprocess, "run", side_effect=run), \
                  patch.object(tools, "download", side_effect=AssertionError("dirty checkout should stop before download")):
-                result = tools._agent_module("hermes", manifest, home, root, bin_dir, None, False, upgrade=True)
+                result = tools._agent_module("hermes", manifest, home, root, bin_dir, None, False, upgrade=True, platform={"os": "linux", "arch": "x86_64"})
             self.assertEqual(result["status"], "failed")
             self.assertIn("refusing to reset", result["detail"])
 
@@ -553,7 +553,7 @@ class ToolTests(unittest.TestCase):
                  patch.object(tools, "validate_script"), patch.object(tools.subprocess, "run", side_effect=run), \
                  patch.object(tools, "_version", return_value=("0.21.5", str(bin_dir / "hermes"))), \
                  patch.object(tools.shutil, "which", return_value=None):
-                result = tools._agent_module("hermes", manifest, home, root, bin_dir, None, False)
+                result = tools._agent_module("hermes", manifest, home, root, bin_dir, None, False, platform={"os": "linux", "arch": "x86_64"})
             self.assertTrue(result["required"])
             self.assertEqual(result["status"], "installed", result["detail"])
             self.assertTrue(any("--hermes-home" in call and str(home / ".hermes") in call for call in calls))
