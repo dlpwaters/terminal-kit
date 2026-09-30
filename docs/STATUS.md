@@ -1,8 +1,8 @@
 # Project status
 
-Snapshot: 2026-09-30. The private repository is on GitHub at [dlpwaters/terminal-kit](https://github.com/dlpwaters/terminal-kit). The first release is prepared; live release transport acceptance is recorded after publication; authentication is intentionally left to the user.
+Snapshot: 2026-09-30. The public repository and [v0.1.0 release](https://github.com/dlpwaters/terminal-kit/releases/tag/v0.1.0) are published under `dlpwaters/terminal-kit`. The release source remains `bacafd2d1c66b6dd35a35278d22e9bbc66dff0f9`; later main-branch commits document the handoff without replacing its artifacts. Agent authentication is intentionally left to the user.
 
-The CLI implementation includes the Omarchy v4.0.4 terminal baseline and independently pinned Omarchy Neovim package, user-owned configuration/recovery, required tools and all three agent CLIs. Debian 12 needs the explicit `treesitter-build` option; Intel macOS needs `intel-build` with current upstream packages. Both use isolated Rust 1.92.0 and preserve security/system-library boundaries.
+The CLI implementation includes the Omarchy v4.0.4 terminal baseline and independently pinned Omarchy Neovim package, user-owned configuration/recovery, required tools and all three agent CLIs. Debian 12 needs the explicit `treesitter-build` option. Intel macOS's `intel-build` path remains incomplete. Both opt-ins use isolated Rust 1.92.0 and preserve security/system-library boundaries.
 
 | Check | Observed state |
 | --- | --- |
@@ -13,9 +13,44 @@ The CLI implementation includes the Omarchy v4.0.4 terminal baseline and indepen
 | Fedora 44 x86_64 | Fresh/repeat install, agents/editor, doctor, rollback and uninstall passed |
 | Arch x86_64, image 20260927.0.600689 | Fresh/repeat install, agents/editor, doctor, rollback and uninstall passed; container allowed the official btop file capabilities |
 | macOS 15.7.9 Apple Silicon | Real headless fresh/repeat install, agents/editor, doctor, rollback and uninstall passed |
-| macOS 15 Intel | Regression checks passed; all agents/editor installed, including cryptography 50 from source; two native dependency attempts failed (initial timeout, then outdated dependencies without Intel bottles). Ordered, bounded source-build acceptance is pending |
+| macOS 15.7.9 Intel | Regression checks passed; all agents/editor installed, including cryptography 50 from source. Latest real full-install attempt failed in the Homebrew outdated-dependency preflight, leaving tmux/btop unavailable; exit 1 correctly reported a partial install |
 | Ghostty | Host 1.3.1 config validator passed; GUI/font/physical keyboard/clipboard checks remain manual |
 | Windows/WSL and Linux ARM | Detection/config tests exist; real host installation/rendering remains unobserved |
-| Release bootstrap | Publication/remote artifact acceptance pending |
+| Release bootstrap | Actual published bootstrap bytes/archive/pins verified; anonymous convenient and immutable/checksum one-liners passed read-only live runs; downloaded artifact install/repeat/doctor/rollback/uninstall passed on isolated Ubuntu 24.04.5 |
 
-CLI code acceptance is [Check](https://github.com/dlpwaters/terminal-kit/actions/workflows/check.yml); real Mac installs are [Platform acceptance](https://github.com/dlpwaters/terminal-kit/actions/workflows/workstation.yml). Desktop and Windows checks are in [MANUAL-CHECKS.md](MANUAL-CHECKS.md). No credential provisioning, paid model requests, host desktop settings, or live host services were changed during development.
+All five jobs in the [release commit's Check run](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940463) passed. [Platform acceptance](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940262) completed: Apple Silicon passed, Intel failed. Desktop and Windows checks are in [MANUAL-CHECKS.md](MANUAL-CHECKS.md). No credential provisioning, paid model requests, host desktop settings, or live host services were changed during development.
+
+## Intel Mac follow-up
+
+Further implementation/testing was deferred at the user's request. Start with the completed [Intel job and its log](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940262/job/110083639561), using the release source above. This is a known partial installation, not accepted Intel support.
+
+Confirmed latest failure:
+
+```text
+intel-build: brew outdated --formula --quiet <ordered dependency list>
+             returned non-zero exit status 1
+tmux:        brew install tmux exited with status 1
+btop:        brew install --build-from-source btop exited with status 1
+installer:   Partial installation: 3 required component(s) unavailable
+```
+
+`lib/terminalkit/tools.py`, function `_prepare_intel_builds`, calls `subprocess.check_output` for `brew outdated` before its ordered source-build loop. The nonzero status aborts that preflight. Subsequent normal installs encounter unavailable Intel bottles (tmux and bmake in this run). Pi 0.99.1, OpenCode 1.18.33, Hermes, the Bash configuration, locked LazyVim, parsers, language servers and formatters did install; the overall receipt correctly exited 1.
+
+Earlier attempts hit a 30-minute build timeout and then outdated dependency/bottle failures. The current implementation already orders dependencies, limits targeted upgrades, bounds the native build phase and stops compiler child processes on interruption. Do not restart those approaches from scratch.
+
+- [ ] Inspect Homebrew's documented `outdated` return-code behavior on Intel, capture stdout/stderr safely, and fix the preflight to distinguish outdated formulas from an actual query failure. Add a regression test for the observed nonzero/result combination before rerunning the expensive build.
+- [ ] Verify ordered, explicit source installation of tmux/btop and their missing/outdated dependencies. Check for bmake/pkgconf availability and texinfo post-install conflicts; avoid global Homebrew upgrades or an implicit large application build.
+- [ ] Run a real macOS Intel headless install with `bash install.sh --profile headless --with intel-build` in a disposable user/home. Then verify repeat install, doctor, tmux layouts on an isolated server, clean headless Neovim, all three agent executable checks without credentials, interrupted-build resume, rollback and uninstall. A detection mock or regression job is not this acceptance test.
+- [ ] On a physical Intel Mac, validate stock Bash 3.2 entry, Homebrew prefix discovery, first-run Command Line Tools/OS authorization, Ghostty startup/font/clipboard and Bash in new tmux panes. Check Ctrl-Space/Ctrl-B, Option/Alt and Shift-Enter through the actual terminal/editor/SSH path.
+- [ ] Recheck current Homebrew/Ghostty supported Intel OS versions before extending claims beyond the observed 15.7.9 runner. Preserve Hermes's cryptography security pin and isolated runtime strategy.
+
+Useful pickup commands:
+
+```bash
+git clone https://github.com/dlpwaters/terminal-kit.git
+cd terminal-kit
+gh run view 36772940262 --repo dlpwaters/terminal-kit --job 110083639561 --log
+bash install.sh --profile headless --with intel-build --dry-run
+```
+
+Use the dry run first; the real source build can take 20–90 minutes. The GUI/WSL/Linux ARM checklist is still open in [MANUAL-CHECKS.md](MANUAL-CHECKS.md). Agent login and OS authorization remain user actions.

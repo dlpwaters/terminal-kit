@@ -4,7 +4,7 @@ The installer supports x86_64 Ubuntu 22.04, 24.04, and 26.04; Debian 12 and
 13; Fedora 42, 43, and 44; and rolling Arch Linux. Debian, Ubuntu, and Fedora
 also support aarch64 using official release binaries; Arch ARM remains outside
 the support matrix. WSL 2 is a supported Linux host, while WSL 1 is rejected.
-The macOS floor is 13 on Intel and 15 on Apple Silicon. Intel Macs carry a
+The detection floor is macOS 13 on Intel and 15 on Apple Silicon. Full Intel installation is currently incomplete; see the [known failure and follow-up](STATUS.md#intel-mac-follow-up). Intel Macs also carry a
 Homebrew support-tier caveat; Homebrew's current [Tier 1 Apple Silicon range](https://docs.brew.sh/Support-Tiers)
 starts at macOS 15. Other distributions are reported as unsupported rather
 than receiving guessed package names or third-party repositories. Headless
@@ -17,7 +17,7 @@ for optional desktop features.
 | Ghostty | Arch Linux, macOS with Homebrew cask, Ubuntu 26.04+ official apt source | Other supported Linux versions and Windows have no kit-managed native Ghostty install. WSLg launch needs separate host validation. |
 | Nerd Font | Linux and macOS user font directories | Windows Terminal must use the separate Windows font installer. WSL's Linux-side font path does not install on Windows. |
 | Tree-sitter CLI | Official binary where its runtime ABI matches; source fallback is opt-in | On older glibc hosts use `./install.sh --with treesitter-build`. It compiles pinned 0.26.1 with isolated mise Rust and requires native libclang development headers; it does not update system libraries. |
-| Intel macOS build dependencies | Explicit `--with intel-build` | Builds missing tmux/btop Homebrew dependencies and OpenSSL, then uses isolated Rust 1.92.0 for Hermes's cryptography 50.0.0. The upstream security pin is preserved. Without this opt-in, a missing required tool is an honest partial result. |
+| Intel macOS build dependencies | Explicit `--with intel-build`; currently incomplete | Latest real Intel install failed in Homebrew's outdated-dependency preflight; tmux/btop remained missing. Agents/editor installed, including Hermes with isolated Rust 1.92.0 and its unchanged cryptography 50.0.0 security pin. See the [Intel handoff](STATUS.md#intel-mac-follow-up); no full Intel acceptance is claimed. |
 | Extras (`tealdeer`, `ncdu`, `tree`) | Native apt, dnf, pacman, and Homebrew package mappings | Optional `--with extras`; availability remains package-manager specific. |
 
 The base tool set comes from the host's native package manager. Existing
@@ -65,9 +65,9 @@ application can launch. Those desktop paths need separate live validation.
 | Ubuntu 24.04.5 | Fresh install, repeated doctor, rollback, and uninstall passed |
 | Fedora 44 | Fresh install, repeated doctor, rollback, and uninstall passed |
 | Arch x86_64 | Official base image `20260927.0.600689`, tested 2026-09-30: fresh/repeat, agents/editor, doctor, rollback and uninstall passed. Docker needed `DAC_READ_SEARCH` and `PERFMON` for the native btop file capabilities; no host files/process namespace were shared. |
-| macOS CI | Regression checks passed on macOS 15 Apple Silicon and Intel. Real Apple Silicon 15.7.9 headless fresh/repeat/doctor/rollback/uninstall passed; Intel agents/editor installed, but native dependency builds hit timeout and outdated-dependency/bottle constraints. Ordered source-build acceptance is pending. |
+| macOS CI | Regression checks passed on macOS 15 Apple Silicon and Intel. Real Apple Silicon 15.7.9 headless fresh/repeat/doctor/rollback/uninstall passed. Latest Intel 15.7.9 attempt failed in `brew outdated` preflight and left tmux/btop missing; agents/editor installed. Further Intel work is deferred, with exact failure and acceptance checks in [Status](STATUS.md#intel-mac-follow-up). |
 | Native desktop / Windows WSL physical checks | Pending |
-| Release bootstrap | Private `v0.1.0` release not published; authenticated release path not yet exercised |
+| Release bootstrap | Public `v0.1.0` published; anonymous live one-liners, exact artifact/bootstrap pins and downloaded archive's Ubuntu install/recovery passed |
 
 The platform and tool unit tests exercise normalized host metadata, support
 decisions, dry-run behavior, and reuse logic. They do not install packages or
