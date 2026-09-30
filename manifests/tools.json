@@ -324,6 +324,66 @@
         "macos-aarch64": "lazydocker",
         "linux-aarch64": "lazydocker"
       }
+    },
+    "ripgrep": {
+      "version": "15.2.0",
+      "repo": "BurntSushi/ripgrep",
+      "assets": {
+        "macos-aarch64": {
+          "name": "ripgrep-15.2.0-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-aarch64-apple-darwin.tar.gz",
+          "sha256": "3750b2e93f37e0c692657da574d7019a101c0084da05a790c83fd335bad973e4"
+        },
+        "macos-x86_64": {
+          "name": "ripgrep-15.2.0-x86_64-apple-darwin.tar.gz",
+          "url": "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-apple-darwin.tar.gz",
+          "sha256": "af7825fcc69a2afc7a7aea55fc9af90e26421d8f20fe59df32e233c0b8a231c1"
+        }
+      },
+      "binary_member": {
+        "macos-aarch64": "ripgrep-15.2.0-aarch64-apple-darwin/rg",
+        "macos-x86_64": "ripgrep-15.2.0-x86_64-apple-darwin/rg"
+      }
+    },
+    "fd": {
+      "version": "v10.5.0",
+      "repo": "sharkdp/fd",
+      "assets": {
+        "macos-aarch64": {
+          "name": "fd-v10.5.0-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/sharkdp/fd/releases/download/v10.5.0/fd-v10.5.0-aarch64-apple-darwin.tar.gz",
+          "sha256": "b67e1836c468e42e411984b56e52fa7abec08c2bd22c867398e7cc134aac5e12"
+        },
+        "macos-x86_64": {
+          "name": "fd-v10.5.0-x86_64-apple-darwin.tar.gz",
+          "url": "https://github.com/sharkdp/fd/releases/download/v10.5.0/fd-v10.5.0-x86_64-apple-darwin.tar.gz",
+          "sha256": "7e31028c62c6955877735d0406807aa484c2a5e6f86235a59e26c29c301da590"
+        }
+      },
+      "binary_member": {
+        "macos-aarch64": "fd-v10.5.0-aarch64-apple-darwin/fd",
+        "macos-x86_64": "fd-v10.5.0-x86_64-apple-darwin/fd"
+      }
+    },
+    "bat": {
+      "version": "v0.26.1",
+      "repo": "sharkdp/bat",
+      "assets": {
+        "macos-aarch64": {
+          "name": "bat-v0.26.1-aarch64-apple-darwin.tar.gz",
+          "url": "https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-aarch64-apple-darwin.tar.gz",
+          "sha256": "e30beff26779c9bf60bb541e1d79046250cb74378f2757f8eb250afddb19e114"
+        },
+        "macos-x86_64": {
+          "name": "bat-v0.26.1-x86_64-apple-darwin.tar.gz",
+          "url": "https://github.com/sharkdp/bat/releases/download/v0.26.1/bat-v0.26.1-x86_64-apple-darwin.tar.gz",
+          "sha256": "830d63b0bba1fa040542ec569e3cf77f60d3356b9de75116a344b061e0894245"
+        }
+      },
+      "binary_member": {
+        "macos-aarch64": "bat-v0.26.1-aarch64-apple-darwin/bat",
+        "macos-x86_64": "bat-v0.26.1-x86_64-apple-darwin/bat"
+      }
     }
   },
   "mise": {

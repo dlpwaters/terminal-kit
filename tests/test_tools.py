@@ -52,6 +52,37 @@ class PlatformTests(unittest.TestCase):
 
 
 class ToolTests(unittest.TestCase):
+    def test_successful_verified_fallback_resolves_native_failure(self):
+        rows = [tools._result("neovim", "failed", "Native bottle unavailable")]
+        tools._record_fallback(rows, tools._result("neovim", "installed", "Verified release executable"))
+        self.assertFalse(any(row["required"] and row["status"] == "failed" for row in rows))
+        self.assertIn("verified upstream binary", rows[0]["detail"])
+        failed = [tools._result("neovim", "failed", "Native package failed")]
+        tools._record_fallback(failed, tools._result("neovim", "failed", "Binary failed verification"))
+        self.assertTrue(all(row["required"] for row in failed))
+
+    def test_intel_homebrew_only_builds_selected_small_dependencies(self):
+        with patch.object(tools.sys, "platform", "darwin"), \
+             patch.object(tools.host_platform, "machine", return_value="x86_64"):
+            self.assertIn("--build-from-source", tools._pkg_command("brew", "bash", True))
+            self.assertIn("--force-bottle", tools._pkg_command("brew", "neovim", True))
+            self.assertIn("--force-bottle", tools._pkg_command("brew", "bat", True))
+
+    def test_macos_managed_mise_remains_owned_during_update(self):
+        manifest = tools._manifest(Path(__file__).resolve().parents[1])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve() / "kit"
+            executable = root / "tools/mise/mise"
+            executable.parent.mkdir(parents=True)
+            executable.write_text("managed executable")
+            executable.chmod(0o755)
+            with patch.object(tools.shutil, "which", return_value=str(executable)), \
+                 patch.object(tools, "_version", return_value=("2026.9.18", str(executable))), \
+                 patch.object(tools, "download", side_effect=AssertionError("already current")):
+                _, result = tools._ensure_mise(manifest, root, root / "bin", {"os": "macos", "arch": "aarch64"}, True, upgrade=True)
+            self.assertEqual(result["status"], "reused")
+            self.assertEqual(result["ownership"], "terminal-kit")
+
     def test_version_ignores_commit_hash_and_build_date_before_lazygit_version(self):
         output = "commit=17cb09fa, build date=2026-09-13, version=0.65.1, git version=2.43.0"
         with patch.object(tools.shutil, "which", return_value="/kit/bin/lazygit"), \

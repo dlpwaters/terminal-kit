@@ -359,6 +359,39 @@
         "computer-use/cua-driver"
       ],
       "decision": "Required client in both profiles; use the pinned official staged installer with the recorded supported Python range. Setup/authentication remains the user's action; optional browser and computer-use tooling are excluded."
+    },
+    {
+      "name": "ripgrep",
+      "role": "native-package-with-verified-macos-fallback",
+      "repository": "https://github.com/BurntSushi/ripgrep",
+      "version": "15.2.0",
+      "license": "MIT or Unlicense",
+      "inspection": [
+        "official release metadata and macOS archive members"
+      ],
+      "decision": "Use compatible native packages; verified upstream binaries avoid Intel Homebrew Rust source builds."
+    },
+    {
+      "name": "fd",
+      "role": "native-package-with-verified-macos-fallback",
+      "repository": "https://github.com/sharkdp/fd",
+      "version": "v10.5.0",
+      "license": "MIT or Apache-2.0",
+      "inspection": [
+        "official release metadata and macOS archive members"
+      ],
+      "decision": "Use compatible native packages; verified upstream binaries avoid Intel Homebrew Rust source builds."
+    },
+    {
+      "name": "bat",
+      "role": "native-package-with-verified-macos-fallback",
+      "repository": "https://github.com/sharkdp/bat",
+      "version": "v0.26.1",
+      "license": "MIT or Apache-2.0",
+      "inspection": [
+        "official release metadata and macOS archive members"
+      ],
+      "decision": "Use compatible native packages; verified upstream binaries avoid Intel Homebrew Rust source builds."
     }
   ],
   "licenses": {

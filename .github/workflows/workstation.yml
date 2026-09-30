@@ -20,9 +20,12 @@ jobs:
           export HOME="$(mktemp -d "$RUNNER_TEMP/terminal-kit-home.XXXXXX")"
           ./install.sh --profile headless --unattended
           export PATH="$HOME/.local/share/terminal-kit/bin:$HOME/.local/bin:$PATH"
+          ./install.sh --profile headless --unattended
           terminal-kit doctor
           pi --version
           hermes --version
           opencode --version
           nvim --headless '+lua assert(require("lazy.core.config").plugins.LazyVim)' +qa
+          tk_backup=$(python3 -c 'import json,pathlib; print(json.loads((pathlib.Path.home()/".local/state/terminal-kit/installation.json").read_text())["backup"])')
+          terminal-kit rollback "$tk_backup"
           terminal-kit uninstall

@@ -72,7 +72,10 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ] && [ "$tk_dry" -eq 0 ]; then
   tk_bash="$tk_prefix/bin/bash"
   if [ ! -x "$tk_bash" ]; then
     echo 'Installing modern Bash with Homebrew; Intel Macs may build this small shell dependency from source.'
-    "$tk_brew" install bash
+    case "$(uname -m)" in
+      x86_64) "$tk_brew" install --build-from-source bash ;;
+      *) "$tk_brew" install bash ;;
+    esac
   fi
   exec "$tk_bash" "$tk_root/install.sh" "$@"
 fi

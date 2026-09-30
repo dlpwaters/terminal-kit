@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tempfile
 import sys
+import platform as host_platform
 from pathlib import Path
 
 from .download import download, safe_extract, validate_script
@@ -89,8 +90,10 @@ def _pkg_command(pm: str, package: str, unattended: bool) -> list[str]:
         return ["pacman", "-S", "--needed", *( ["--noconfirm"] if unattended else []), package]
     if pm == "brew":
         # Verified release fallbacks avoid large source builds on Tier 3 Macs.
-        bottle_only = package in ("neovim", "fzf", "eza", "zoxide", "starship", "lazygit", "lazydocker")
-        return ["brew", "install", *(["--force-bottle"] if bottle_only else []), package]
+        bottle_only = package in ("neovim", "fzf", "eza", "zoxide", "starship", "lazygit", "lazydocker", "ripgrep", "fd", "bat")
+        small_intel_build = sys.platform == "darwin" and host_platform.machine() == "x86_64" and package in ("bash", "bash-completion@2", "btop", "jq", "gnu-tar", "unzip", "curl")
+        flags = ["--force-bottle"] if bottle_only else (["--build-from-source"] if small_intel_build else [])
+        return ["brew", "install", *flags, package]
     raise ValueError(f"Unsupported package manager: {pm}")
 
 
@@ -180,7 +183,16 @@ def _asset_key(platform: dict) -> str:
 
 
 def _command_name(name: str) -> str:
-    return {"neovim": "nvim"}.get(name, name)
+    return {"neovim": "nvim", "ripgrep": "rg"}.get(name, name)
+
+
+def _record_fallback(results: list[dict], fallback: dict):
+    if fallback["status"] in ("installed", "reused"):
+        for previous in results:
+            if previous["name"] == fallback["name"] and previous["status"] in ("failed", "unsupported"):
+                previous["required"] = False
+                previous["detail"] += "; verified upstream binary supplies the required command"
+    results.append(fallback)
 
 
 def _owned_link(path: Path, target: Path, owned_root: Path) -> None:
@@ -463,7 +475,7 @@ def _ensure_mise(manifest: dict, root: Path, bin_dir: Path, platform: dict, dry_
     if platform.get("os") == "macos":
         existing = shutil.which("mise")
         version, _ = _version("mise", ["--version"])
-        if existing and version:
+        if existing and version and not _managed_path(existing, root):
             return Path(existing), _result("mise", "reused", "Preserving host-managed mise", version=version, path=existing, ownership="existing")
     if not asset:
         return None, _result("mise", "unsupported", f"No pinned mise artifact for {_asset_key(platform)}", required=False)
@@ -831,7 +843,7 @@ def install_tools(repo: Path, home: Path, platform: dict, modules: list[str], un
                     results.append(_result(package, "reused", "Package database confirms it is installed", path=executable, ownership=pm))
                     continue
                 if current and _at_least(current, minimum) and not ensure_package:
-                    results.append(_result(package, "reused", f"Using existing {command}", version=current, path=executable, ownership="existing"))
+                    results.append(_result(package, "reused", f"Using existing {command}", version=current, path=executable, ownership="terminal-kit" if _managed_path(executable, root) else "existing"))
                     continue
                 needs_native = not current or ensure_package or (bool(minimum and not _at_least(current, minimum)) and package in packages)
                 if needs_native:
@@ -858,19 +870,22 @@ def install_tools(repo: Path, home: Path, platform: dict, modules: list[str], un
                     else:
                         results.append(_result(package, status, detail, version=current, path=executable, ownership="existing" if current else None))
                 if package in manifest.get("releases", {}) and (not current or (minimum and not _at_least(current, minimum))):
-                    results.append(_install_asset(package, manifest["releases"][package], root, bin_dir, platform, dry_run))
+                    _record_fallback(results, _install_asset(package, manifest["releases"][package], root, bin_dir, platform, dry_run))
                 elif not current:
                     if not any(row["name"] == package and row["status"] in ("failed", "skipped", "installed") for row in results):
                         results.append(_result(package, "failed", f"{command} is unavailable after package check"))
                 elif minimum and not _at_least(current, minimum):
                     results.append(_result(package, "unsupported", f"Installed {command} {current} is below required {minimum}", version=current, path=executable, ownership="existing"))
                 elif not installed_now:
-                    results.append(_result(package, "reused", f"Using {command}", version=current, path=executable, ownership="existing"))
+                    results.append(_result(package, "reused", f"Using {command}", version=current, path=executable, ownership="terminal-kit" if _managed_path(executable, root) else "existing"))
         # Official pinned releases fill tool gaps from older vendor repositories.
-        for name in ("neovim", "fzf", "eza", "zoxide", "starship", "lazygit", "lazydocker"):
+        candidates = ("neovim", "fzf", "eza", "zoxide", "starship", "lazygit", "lazydocker")
+        if platform.get("os") == "macos":
+            candidates += ("ripgrep", "fd", "bat")
+        for name in candidates:
             if name not in manifest.get("releases", {}):
                 continue
-            command = {"neovim": "nvim"}.get(name, name)
+            command = _command_name(name)
             minimum = manifest.get("minimum_versions", {}).get(command)
             current, executable = _version(command, _CHECKS.get(command, (command, ["--version"]))[1])
             if upgrade:
@@ -885,7 +900,7 @@ def install_tools(repo: Path, home: Path, platform: dict, modules: list[str], un
                 continue
             existing_fallback = next((r for r in reversed(results) if r["name"] == name and r["status"] in ("installed", "reused", "skipped")), None)
             if not existing_fallback:
-                results.append(_install_asset(name, manifest["releases"][name], root, bin_dir, platform, dry_run))
+                _record_fallback(results, _install_asset(name, manifest["releases"][name], root, bin_dir, platform, dry_run))
 
     if requested & {"nvim", "treesitter-build"}:
         results.append(_tree_sitter_cli(manifest, root, bin_dir, platform, unattended, dry_run, upgrade,
