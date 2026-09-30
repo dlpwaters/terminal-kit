@@ -4,6 +4,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 import zipfile
 
@@ -52,6 +53,24 @@ class TransportTests(unittest.TestCase):
         with patch("urllib.request.OpenerDirector.open", side_effect=OSError("HTTP 404")):
             with self.assertRaises(DownloadError):
                 download("https://example.invalid/missing", self.root / "artifact")
+
+    def test_transient_http_retry_is_bounded_and_errors_do_not_disclose_url(self):
+        url = "https://example.invalid/file?private=hidden-value"
+        error = urllib.error.HTTPError(url, 503, "Unavailable", {}, None)
+        data = b"verified data"
+        with patch("urllib.request.OpenerDirector.open", side_effect=[error, Response(data, {})]) as transport, \
+             patch("terminalkit.download.time.sleep"):
+            download(url, self.root / "artifact", hashlib.sha256(data).hexdigest())
+            self.assertEqual(transport.call_count, 2)
+        for status, calls in ((503, 2), (404, 1)):
+            with patch("urllib.request.OpenerDirector.open", side_effect=urllib.error.HTTPError(url, status, "Failure", {}, None)) as transport, \
+                 patch("terminalkit.download.time.sleep"):
+                with self.assertRaises(DownloadError) as failure:
+                    download(url, self.root / "missing")
+                self.assertEqual(transport.call_count, calls)
+                self.assertIn(f"HTTP {status}", str(failure.exception))
+                self.assertNotIn("hidden-value", str(failure.exception))
+                self.assertFalse((self.root / "missing").exists())
 
     def test_size_and_protocol_limits(self):
         with self.assertRaises(DownloadError):

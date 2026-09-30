@@ -27,4 +27,6 @@ These checks require a real host session. A unit test or successful package comm
 
 ## Current execution record
 
-As of 2026-09-30, Debian 12 x86_64, Ubuntu 24.04.5, and Fedora 44 full-install/recovery checks passed. Automated and container checks are recorded in [Status](STATUS.md). Real desktop, macOS authorization, Windows Terminal/WSL font rendering, and physical disconnect/reboot acceptance remain separate.
+As of 2026-09-30, Debian 12 x86_64, Ubuntu 24.04.5, Fedora 44, Arch image 20260927.0.600689, and macOS 15.7.9 Apple Silicon headless full-install/recovery checks passed. Automated and container checks are recorded in [Status](STATUS.md). Real desktop, macOS authorization, Windows Terminal/WSL font rendering, and physical disconnect/reboot acceptance remain separate.
+
+The Arch reproduction uses `docker build -f tests/containers/Dockerfile.arch -t terminal-kit-arch-test .` followed by `docker run --rm --cap-add DAC_READ_SEARCH --cap-add PERFMON terminal-kit-arch-test`. The official base image inspected was `sha256:b21322c663be387c0ed9cbc7bbbfe18e41633ad4e7b7c77cfad45f128be20040`. Those container capabilities allow execution of Arch's native btop package; they do not validate its live monitor UI or grant host access.

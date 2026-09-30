@@ -7,9 +7,11 @@ import gzip
 import os
 import re
 import shlex
+import signal
 import shutil
 import subprocess
 import tempfile
+import time
 import sys
 import platform as host_platform
 from pathlib import Path
@@ -105,7 +107,22 @@ def _run_native(command: list[str], pm: str, unattended: bool, *, timeout: int =
                        "HOMEBREW_NO_INSTALL_UPGRADE": "1",
                        "HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK": "1",
                        "HOMEBREW_NO_INSTALL_CLEANUP": "1"}
-        return subprocess.run(command, check=False, timeout=timeout, env=environment)
+        process = subprocess.Popen(command, env=environment, start_new_session=True)
+        try:
+            return subprocess.CompletedProcess(command, process.wait(timeout=timeout))
+        except (subprocess.TimeoutExpired, KeyboardInterrupt):
+            # Stop compiler descendants too, so a resumed install doesn't race
+            # an abandoned Homebrew build still holding package locks.
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait(timeout=5)
+            raise
     if os.geteuid() == 0:
         return subprocess.CompletedProcess(command, 1, "", "Refusing native package operations as root")
     sudo = shutil.which("sudo")
@@ -564,19 +581,31 @@ def _prepare_intel_builds(platform: dict, requested: set, dry_run: bool) -> dict
     if not formulas:
         return _result("intel-build", "reused", "Compatible native tools and OpenSSL already exist", ownership="existing")
     try:
-        deps = subprocess.check_output(["brew", "deps", "--union", "--include-build", *formulas], text=True, timeout=120).splitlines()
+        deps = subprocess.check_output(["brew", "deps", "--topological", "--union", "--include-build", *formulas], text=True, timeout=120).splitlines()
         packages = list(dict.fromkeys([*deps, *formulas]))
         if len(packages) > 60 or any(not re.fullmatch(r"[A-Za-z0-9@+_.-]+", item) for item in packages):
             raise ValueError("Unexpected or excessive Homebrew dependency list; refusing source builds")
         inventory = subprocess.check_output(["brew", "list", "--formula", "--versions"], text=True, timeout=30)
         installed = {line.split()[0] for line in inventory.splitlines() if line.split()}
-        # Don't request upgrades to installed dependencies. Homebrew may still
-        # require newer dependencies for the requested formula's source build.
-        packages = [name for name in packages if name not in installed or name in formulas]
-        command = ["brew", "install", "--build-from-source", *packages]
-        print(shlex.join(command), file=sys.stderr, flush=True)
-        result = _run_native(command, "brew", True, timeout=3600)
-        return _result("intel-build", "installed" if result.returncode == 0 else "failed", f"Explicit Homebrew dependency build exited {result.returncode}", ownership="brew" if result.returncode == 0 else None)
+        outdated = set(subprocess.check_output(["brew", "outdated", "--formula", "--quiet", *packages], text=True, timeout=120).splitlines())
+        if not outdated.issubset(packages):
+            raise ValueError("Unexpected Homebrew upgrade targets")
+        deadline = time.monotonic() + 3600
+        # Current Homebrew source formulas require current dependency versions.
+        # Install in dependency order to avoid unavailable-bottle fallbacks and
+        # duplicate post-install actions within one large brew transaction.
+        for name in packages:
+            if name in installed and name not in outdated:
+                continue
+            command = ["brew", "upgrade" if name in outdated else "install", "--build-from-source", name]
+            print(shlex.join(command), file=sys.stderr, flush=True)
+            remaining = int(deadline - time.monotonic())
+            if remaining <= 0:
+                raise TimeoutError("Explicit Intel dependency build exceeded its 60-minute bound; rerun to resume")
+            result = _run_native(command, "brew", True, timeout=remaining)
+            if result.returncode:
+                return _result("intel-build", "failed", f"Explicit Homebrew {name} build exited {result.returncode}; rerun to resume")
+        return _result("intel-build", "installed", "Explicit Homebrew dependencies verified in order", ownership="brew")
     except (OSError, subprocess.SubprocessError, ValueError) as exc:
         return _result("intel-build", "failed", f"Explicit native build failed: {exc}")
 

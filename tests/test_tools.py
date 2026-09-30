@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -72,19 +73,44 @@ class ToolTests(unittest.TestCase):
 
     def test_intel_build_reuses_inventory_and_has_explicit_longer_bound(self):
         with patch.object(tools, "_version", return_value=(None, None)), \
-             patch.object(tools.subprocess, "check_output", side_effect=["cmake\nlibevent\n", "cmake 4.4.2\n"]), \
+             patch.object(tools.subprocess, "check_output", side_effect=["cmake\nlibevent\n", "cmake 4.4.2\n", ""]), \
+             patch.object(tools.time, "monotonic", return_value=100), \
              patch.object(tools, "_run_native", return_value=tools.subprocess.CompletedProcess([], 0)) as native:
             result = tools._prepare_intel_builds({"os": "macos", "arch": "x86_64"}, {"cli"}, False)
         self.assertEqual(result["status"], "installed")
-        native.assert_called_once_with(["brew", "install", "--build-from-source", "libevent", "tmux", "btop"], "brew", True, timeout=3600)
+        self.assertEqual([call.args[0] for call in native.call_args_list], [["brew", "install", "--build-from-source", name] for name in ("libevent", "tmux", "btop")])
+        self.assertTrue(all(call.kwargs["timeout"] == 3600 for call in native.call_args_list))
+
+    def test_intel_build_upgrades_only_required_outdated_dependencies_before_parents(self):
+        with patch.object(tools, "_version", return_value=(None, None)), \
+             patch.object(tools.subprocess, "check_output", side_effect=["pkgconf\nlibevent\n", "pkgconf 3.0.5\nunrelated 1.0\n", "pkgconf\n"]), \
+             patch.object(tools, "_run_native", return_value=tools.subprocess.CompletedProcess([], 0)) as native:
+            result = tools._prepare_intel_builds({"os": "macos", "arch": "x86_64"}, {"cli"}, False)
+        self.assertEqual(result["status"], "installed")
+        commands = [call.args[0] for call in native.call_args_list]
+        self.assertEqual(commands[0], ["brew", "upgrade", "--build-from-source", "pkgconf"])
+        self.assertEqual(commands[1], ["brew", "install", "--build-from-source", "libevent"])
+        self.assertFalse(any("unrelated" in command for command in commands))
 
     def test_homebrew_operations_do_not_cleanup_or_upgrade_unrelated_dependents(self):
-        with patch.object(tools.subprocess, "run", return_value=tools.subprocess.CompletedProcess([], 0)) as run:
+        with patch.object(tools.subprocess, "Popen") as spawn:
+            spawn.return_value.wait.return_value = 0
             tools._run_native(["brew", "install", "tmux"], "brew", True)
-        environment = run.call_args.kwargs["env"]
+        environment = spawn.call_args.kwargs["env"]
         for flag in ("HOMEBREW_NO_AUTO_UPDATE", "HOMEBREW_NO_INSTALL_UPGRADE", "HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK", "HOMEBREW_NO_INSTALL_CLEANUP"):
             self.assertEqual(environment[flag], "1")
-        self.assertEqual(run.call_args.kwargs["timeout"], 1800)
+        spawn.return_value.wait.assert_called_once_with(timeout=1800)
+        self.assertTrue(spawn.call_args.kwargs["start_new_session"])
+
+    def test_timed_out_native_build_stops_compiler_descendants(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary) / "abandoned-child"
+            child = "import time,sys,pathlib; time.sleep(0.6); pathlib.Path(sys.argv[1]).write_text('still running')"
+            parent = "import subprocess,sys,time; subprocess.Popen([sys.executable,'-c',sys.argv[1],sys.argv[2]]); time.sleep(10)"
+            with self.assertRaises(tools.subprocess.TimeoutExpired):
+                tools._run_native([sys.executable, "-c", parent, child, str(marker)], "brew", True, timeout=0.2)
+            time.sleep(0.7)
+            self.assertFalse(marker.exists(), "Compiler child survived the bounded build")
 
     def test_intel_hermes_requires_explicit_build_without_downgrading_security_pin(self):
         manifest = tools._manifest(Path(__file__).resolve().parents[1])

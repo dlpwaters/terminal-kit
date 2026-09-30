@@ -6,6 +6,8 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -38,7 +40,17 @@ def download(url, dest, sha256=None, max_bytes=500 * 1024 * 1024):
     try:
         opener = urllib.request.build_opener(HTTPSRedirect())
         request = urllib.request.Request(url, headers={"User-Agent": "terminal-kit/0.1"})
-        with opener.open(request, timeout=45) as response, os.fdopen(fd, "wb") as output:
+        for attempt in range(2):
+            try:
+                response = opener.open(request, timeout=45)
+                break
+            except urllib.error.HTTPError as exc:
+                exc.close()
+                if attempt or exc.code not in (429, 500, 502, 503, 504):
+                    # URLs and headers can contain signed credentials.
+                    raise DownloadError(f"Download server returned HTTP {exc.code}") from exc
+                time.sleep(1)
+        with response, os.fdopen(fd, "wb") as output:
             fd = None
             expected = response.headers.get("Content-Length")
             if expected and int(expected) > max_bytes:

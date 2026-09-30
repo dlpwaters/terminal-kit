@@ -9,6 +9,8 @@ Start with `terminal-kit doctor`. It checks the installation receipt, executable
 - **Package authorization failed:** rerun interactively as your normal user and approve only the native package operation. `--unattended` works only when noninteractive sudo is already authorized. Never run the entire installer as root.
 - **An existing config conflicts:** inspect the named path and the backup list with `terminal-kit rollback --list`. Preserve local edits; use `~/.config/terminal-kit/local/` for customizations. Do not delete the kit state directory to force a retry.
 
+HTTP downloads retry a temporary 429/500/502/503/504 response once, then fail with the status code. Permanent failures and checksum failures are not retried. Rerun after restoring network access; complete verified downloads are cached. URLs and signed headers are excluded from error reports.
+
 ## Neovim or plugin setup fails
 
 The plugin lock is mutable user state at `~/.local/state/terminal-kit/nvim-lazy-lock.json`; reviewed kit updates retain it. Inspect the reported install log under `~/.local/state/terminal-kit/`, then retry the restore directly:

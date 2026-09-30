@@ -58,13 +58,14 @@ application can launch. Those desktop paths need separate live validation.
 | Check | Current evidence (2026-09-30) |
 | --- | --- |
 | ShellCheck and Bash syntax | Passed |
-| Python unit tests | Host: 85/85 passed. Container: 84 passed, 1 skipped because Ghostty is unavailable (the host Ghostty validator test passed). |
+| Python unit tests | Host: 88/88 passed. Container: 87 passed, 1 skipped because Ghostty is unavailable (the host Ghostty validator test passed). |
 | Bats checks | 8 passed |
 | Isolated tmux layout | Passed in container |
 | Debian 12 x86_64 | Clean CI and local recovery with explicit `--with treesitter-build`, parsers/LSPs/agents, doctor, rollback, and uninstall passed. Without the opt-in, older-glibc Tree-sitter availability is reported as partial. |
 | Ubuntu 24.04.5 | Fresh install, repeated doctor, rollback, and uninstall passed |
 | Fedora 44 | Fresh install, repeated doctor, rollback, and uninstall passed |
-| macOS CI | Regression checks passed on macOS 15 Apple Silicon and Intel. Real Apple Silicon 15.7.9 headless fresh/repeat/doctor/rollback/uninstall passed; Intel agents/editor installed, but tmux/btop dependency builds exceeded the old 30-minute bound. Revised source-build acceptance is pending. |
+| Arch x86_64 | Official base image `20260927.0.600689`, tested 2026-09-30: fresh/repeat, agents/editor, doctor, rollback and uninstall passed. Docker needed `DAC_READ_SEARCH` and `PERFMON` for the native btop file capabilities; no host files/process namespace were shared. |
+| macOS CI | Regression checks passed on macOS 15 Apple Silicon and Intel. Real Apple Silicon 15.7.9 headless fresh/repeat/doctor/rollback/uninstall passed; Intel agents/editor installed, but native dependency builds hit timeout and outdated-dependency/bottle constraints. Ordered source-build acceptance is pending. |
 | Native desktop / Windows WSL physical checks | Pending |
 | Release bootstrap | Private `v0.1.0` release not published; authenticated release path not yet exercised |
 
