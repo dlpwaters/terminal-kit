@@ -1,0 +1,12 @@
+FROM archlinux:base
+# Refresh this disposable rolling-release test OS; the kit itself never runs -Syu.
+RUN pacman -Syu --noconfirm --needed python sudo curl git xz bash coreutils shellcheck bats tmux \
+    && useradd -m -s /bin/bash tester \
+    && printf 'tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/tester \
+    && chmod 0440 /etc/sudoers.d/tester
+COPY --chown=tester:tester . /opt/terminal-kit
+USER tester
+ENV HOME=/home/tester
+ENV PATH=/usr/local/bin:/usr/bin:/bin
+WORKDIR /opt/terminal-kit
+CMD ["bash", "tests/containers/acceptance.sh"]

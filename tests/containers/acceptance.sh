@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
+tk_failure_report() {
+  tk_status=$?
+  if [ "$tk_status" -ne 0 ]; then
+    for tk_log in "$HOME/.local/state/terminal-kit/nvim-install.log" "$HOME/.local/state/nvim/mason.log"; do
+      if [ -f "$tk_log" ]; then
+        printf '\nInstallation diagnostic: %s\n' "$tk_log"
+        cat "$tk_log"
+      fi
+    done
+  fi
+  exit "$tk_status"
+}
+trap tk_failure_report EXIT
 ./scripts/check.sh
 tk_extra=()
 if [ -r /etc/debian_version ] && [ "$(cut -d . -f 1 /etc/debian_version)" = 12 ]; then
