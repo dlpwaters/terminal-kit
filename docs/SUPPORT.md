@@ -17,6 +17,7 @@ for optional desktop features.
 | Ghostty | Arch Linux, macOS with Homebrew cask, Ubuntu 26.04+ official apt source | Other supported Linux versions and Windows have no kit-managed native Ghostty install. WSLg launch needs separate host validation. |
 | Nerd Font | Linux and macOS user font directories | Windows Terminal must use the separate Windows font installer. WSL's Linux-side font path does not install on Windows. |
 | Tree-sitter CLI | Official binary where its runtime ABI matches; source fallback is opt-in | On older glibc hosts use `./install.sh --with treesitter-build`. It compiles pinned 0.26.1 with isolated mise Rust and requires native libclang development headers; it does not update system libraries. |
+| Intel macOS build dependencies | Explicit `--with intel-build` | Builds missing tmux/btop Homebrew dependencies and OpenSSL, then uses isolated Rust 1.92.0 for Hermes's cryptography 50.0.0. The upstream security pin is preserved. Without this opt-in, a missing required tool is an honest partial result. |
 | Extras (`tealdeer`, `ncdu`, `tree`) | Native apt, dnf, pacman, and Homebrew package mappings | Optional `--with extras`; availability remains package-manager specific. |
 
 The base tool set comes from the host's native package manager. Existing

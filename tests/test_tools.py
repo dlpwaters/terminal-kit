@@ -52,6 +52,27 @@ class PlatformTests(unittest.TestCase):
 
 
 class ToolTests(unittest.TestCase):
+    def test_intel_build_preview_is_read_only_and_other_hosts_skip_it(self):
+        with patch.object(tools.subprocess, "run", side_effect=AssertionError("dry-run executed")), \
+             patch.object(tools.subprocess, "check_output", side_effect=AssertionError("dry-run inspected Homebrew")):
+            result = tools._prepare_intel_builds({"os": "macos", "arch": "x86_64"}, {"cli", "agents"}, True)
+            skipped = tools._prepare_intel_builds({"os": "linux", "arch": "x86_64"}, {"cli"}, False)
+        self.assertEqual(result["status"], "skipped")
+        self.assertIn("20–60 minutes", result["detail"])
+        self.assertEqual(skipped["status"], "skipped")
+
+    def test_intel_hermes_requires_explicit_build_without_downgrading_security_pin(self):
+        manifest = tools._manifest(Path(__file__).resolve().parents[1])
+        with tempfile.TemporaryDirectory() as temporary, \
+             patch.object(tools.shutil, "which", return_value=None), \
+             patch.object(tools, "download", side_effect=AssertionError("build not authorized")):
+            home = Path(temporary)
+            result = tools._agent_module("hermes", manifest, home, home / "kit", home / "kit/bin", None, True,
+                                         platform={"os": "macos", "arch": "x86_64"})
+        self.assertEqual(result["status"], "unsupported")
+        self.assertIn("--with intel-build", result["detail"])
+        self.assertTrue(result["required"])
+
     def test_successful_verified_fallback_resolves_native_failure(self):
         rows = [tools._result("neovim", "failed", "Native bottle unavailable")]
         tools._record_fallback(rows, tools._result("neovim", "installed", "Verified release executable"))

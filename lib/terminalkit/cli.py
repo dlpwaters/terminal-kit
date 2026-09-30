@@ -21,7 +21,7 @@ PROFILES = {
     "headless": ["cli", "runtimes", "agents", "configs", "nvim"],
     "workstation": ["cli", "runtimes", "agents", "configs", "nvim", "ghostty", "fonts"],
 }
-MODULES = set(sum(PROFILES.values(), [])) | {"extras", "docker", "python", "pi", "hermes", "opencode", "codex", "claude", "bash", "tmux", "treesitter-build"}
+MODULES = set(sum(PROFILES.values(), [])) | {"extras", "docker", "python", "pi", "hermes", "opencode", "codex", "claude", "bash", "tmux", "treesitter-build", "intel-build"}
 
 
 def emit(name, status, detail, required=False, **extra):

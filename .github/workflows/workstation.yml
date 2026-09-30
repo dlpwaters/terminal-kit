@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-15, macos-15-intel]
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Headless install in isolated HOME
@@ -18,9 +18,11 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE: '1'
         run: |
           export HOME="$(mktemp -d "$RUNNER_TEMP/terminal-kit-home.XXXXXX")"
-          ./install.sh --profile headless --unattended
+          tk_extra=()
+          if [[ $(uname -m) == x86_64 ]]; then tk_extra=(--with intel-build); fi
+          ./install.sh --profile headless --unattended "${tk_extra[@]}"
           export PATH="$HOME/.local/share/terminal-kit/bin:$HOME/.local/bin:$PATH"
-          ./install.sh --profile headless --unattended
+          ./install.sh --profile headless --unattended "${tk_extra[@]}"
           terminal-kit doctor
           pi --version
           hermes --version

@@ -538,6 +538,60 @@ def _runtime_env(root: Path, bin_dir: Path, env: dict | None = None) -> dict:
     return updated
 
 
+def _prepare_intel_builds(platform: dict, requested: set, dry_run: bool) -> dict:
+    if platform.get("os") != "macos" or platform.get("arch") != "x86_64":
+        return _result("intel-build", "skipped", "Intel Mac source builds do not apply to this host", required=False)
+    detail = "Explicit Intel build: Homebrew tmux/btop dependencies and OpenSSL; Hermes uses isolated pinned Rust. Allow 20–60 minutes and several hundred MiB."
+    if dry_run:
+        return _result("intel-build", "skipped", "Dry run: " + detail)
+    print(detail, file=sys.stderr, flush=True)
+    formulas = []
+    if "cli" in requested:
+        for name, args, minimum in (("tmux", ["-V"], "3.2"), ("btop", ["--version"], None)):
+            if not _at_least(_version(name, args)[0], minimum):
+                formulas.append(name)
+    if requested & {"agents", "hermes"} and not _at_least(_version("hermes", ["--version"])[0], "0.21.5"):
+        try:
+            prefix = subprocess.check_output(["brew", "--prefix", "openssl@3"], text=True, timeout=15).strip()
+        except (OSError, subprocess.SubprocessError) as exc:
+            return _result("intel-build", "failed", f"Could not inspect native OpenSSL: {exc}")
+        if not (Path(prefix) / "include/openssl/ssl.h").is_file():
+            formulas.append("openssl@3")
+    if not formulas:
+        return _result("intel-build", "reused", "Compatible native tools and OpenSSL already exist", ownership="existing")
+    try:
+        deps = subprocess.check_output(["brew", "deps", "--union", "--include-build", *formulas], text=True, timeout=120).splitlines()
+        packages = list(dict.fromkeys([*deps, *formulas]))
+        if len(packages) > 60 or any(not re.fullmatch(r"[A-Za-z0-9@+_.-]+", item) for item in packages):
+            raise ValueError("Unexpected or excessive Homebrew dependency list; refusing source builds")
+        command = ["brew", "install", "--build-from-source", *packages]
+        print(shlex.join(command), file=sys.stderr, flush=True)
+        result = _run_native(command, "brew", True)
+        return _result("intel-build", "installed" if result.returncode == 0 else "failed", f"Explicit Homebrew dependency build exited {result.returncode}", ownership="brew" if result.returncode == 0 else None)
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        return _result("intel-build", "failed", f"Explicit native build failed: {exc}")
+
+
+def _hermes_intel_environment(manifest: dict, root: Path, bin_dir: Path, platform: dict) -> dict:
+    mise, result = _ensure_mise(manifest, root, bin_dir, platform, False)
+    if not mise:
+        raise RuntimeError(result["detail"])
+    rust = manifest["tree_sitter_cli"]["rust_version"]
+    env = _runtime_env(root, bin_dir)
+    env.update({"CARGO_HOME": str(root / "runtimes/cargo-home"), "RUSTUP_HOME": str(root / "runtimes/rustup"),
+                "CARGO_BUILD_JOBS": "2", "RUSTUP_TOOLCHAIN": rust})
+    subprocess.run([str(mise), "install", "--yes", "rust@" + rust], env=env, cwd=root, check=True, timeout=1800)
+    location = Path(subprocess.check_output([str(mise), "where", "rust@" + rust], env=env, cwd=root, text=True, timeout=30).strip()).resolve()
+    binary = location if (location / "rustc").is_file() else location / "bin"
+    if not _managed_path(binary, root) or not (binary / "rustc").is_file():
+        raise ValueError("Isolated Rust path is invalid")
+    env["PATH"] = str(binary) + os.pathsep + env["PATH"]
+    env["OPENSSL_DIR"] = subprocess.check_output(["brew", "--prefix", "openssl@3"], text=True, timeout=15).strip()
+    if not (Path(env["OPENSSL_DIR"]) / "include/openssl/ssl.h").is_file():
+        raise ValueError("OpenSSL headers are missing; rerun --with intel-build")
+    return env
+
+
 def _install_node(mise: Path, root: Path, bin_dir: Path, dry_run: bool, upgrade: bool = False) -> tuple[Path | None, dict]:
     data_dir = root / "runtimes"
     manifest = _manifest(Path(__file__).resolve().parents[2])
@@ -608,7 +662,8 @@ def _install_node(mise: Path, root: Path, bin_dir: Path, dry_run: bool, upgrade:
 
 def _agent_module(agent: str, manifest: dict, home: Path, root: Path,
                   bin_dir: Path, node: Path | None, dry_run: bool,
-                  upgrade: bool = False) -> dict:
+                  upgrade: bool = False, intel_build: bool = False,
+                  platform: dict | None = None) -> dict:
     spec = manifest["agents"][agent]
     required = True
     existing = shutil.which(agent, path=str(bin_dir) + os.pathsep + os.environ.get("PATH", ""))
@@ -626,6 +681,10 @@ def _agent_module(agent: str, manifest: dict, home: Path, root: Path,
         if upgrade and dry_run and managed:
             return _result(agent, "skipped", f"Dry run: update kit-owned {agent} {version or 'unknown'} to pinned {pin}", version=version, path=existing, ownership="terminal-kit")
     if agent == "hermes":
+        platform = platform or {"os": "macos" if sys.platform == "darwin" else "linux", "arch": host_platform.machine()}
+        intel = platform.get("os") == "macos" and platform.get("arch") == "x86_64"
+        if intel and not intel_build:
+            return _result(agent, "unsupported", "Pinned cryptography 50 has no Intel Mac wheel. Use --with intel-build for explicit isolated Rust/OpenSSL compilation; security pins are retained.")
         if dry_run:
             action = "update" if upgrade and existing and managed else "install"
             return _result(agent, "skipped", f"Dry run: {action} from official Hermes installer pinned to {spec['commit']}; setup/browser/computer-use disabled", required=True)
@@ -654,7 +713,10 @@ def _agent_module(agent: str, manifest: dict, home: Path, root: Path,
             node_version, _ = _version(str(hermes_node), ["--version"])
             if not node_version or not _at_least(node_version.lstrip("v"), "22.22.0"):
                 return _result(agent, "failed", "Existing Hermes managed Node is incompatible; refusing to replace Hermes data", required=required, path=str(hermes_node))
-        environment = dict(os.environ)
+        try:
+            environment = _hermes_intel_environment(manifest, root, bin_dir, platform) if intel else dict(os.environ)
+        except Exception as exc:
+            return _result(agent, "failed", f"Intel Hermes build prerequisites failed: {exc}")
         environment["HOME"] = str(root / "hermes-user-home")
         environment["HERMES_HOME"] = str(data)
         environment["PATH"] = str(bin_dir) + os.pathsep + environment.get("PATH", "")
@@ -801,9 +863,11 @@ def install_tools(repo: Path, home: Path, platform: dict, modules: list[str], un
         (root / "cache").mkdir(parents=True, exist_ok=True)
         bin_dir.mkdir(parents=True, exist_ok=True)
     requested = set(modules)
-    known = {"cli", "runtimes", "python", "agents", "pi", "opencode", "hermes", "extras", "ghostty", "fonts", "docker", "configs", "nvim", "bash", "tmux", "codex", "claude", "treesitter-build"}
+    known = {"cli", "runtimes", "python", "agents", "pi", "opencode", "hermes", "extras", "ghostty", "fonts", "docker", "configs", "nvim", "bash", "tmux", "codex", "claude", "treesitter-build", "intel-build"}
     unknown = requested - known
     results = [_result(module, "unsupported", "Unknown installer module", required=False) for module in sorted(unknown)]
+    if "intel-build" in requested and not upgrade:
+        results.append(_prepare_intel_builds(platform, requested, dry_run))
     cli = "cli" in requested
     if cli:
         pm = platform.get("pm")
@@ -1001,9 +1065,9 @@ def install_tools(repo: Path, home: Path, platform: dict, modules: list[str], un
             results.append(_result("node-runtime", "reused" if node_result and node_result["status"] == "reused" else "installed", "Compatible Node/npm is ready", version=node_result.get("version") if node_result else None, path=str(node), ownership=node_result.get("ownership") if node_result else "terminal-kit"))
         selected_agents = {"pi", "opencode", "hermes"} if "agents" in requested else requested & {"pi", "opencode"}
         for agent in sorted(selected_agents):
-            results.append(_agent_module(agent, manifest, home, root, bin_dir, None if agent == "hermes" else node, dry_run, upgrade=upgrade))
+            results.append(_agent_module(agent, manifest, home, root, bin_dir, None if agent == "hermes" else node, dry_run, upgrade=upgrade, intel_build="intel-build" in requested, platform=platform))
     elif "hermes" in requested:
-        results.append(_agent_module("hermes", manifest, home, root, bin_dir, None, dry_run, upgrade=upgrade))
+        results.append(_agent_module("hermes", manifest, home, root, bin_dir, None, dry_run, upgrade=upgrade, intel_build="intel-build" in requested, platform=platform))
 
     if "extras" in requested:
         for package in manifest.get("extras", {}).get(platform.get("pm"), []):
