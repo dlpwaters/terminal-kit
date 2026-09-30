@@ -51,6 +51,25 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(bashrc.read_text(), "export MY_OLD_SETTING=1\n")
         self.assertEqual(override.read_text(), "export MY_LOCAL=1\n")
 
+    def test_selected_bash_keeps_stable_homebrew_link_across_upgrades(self):
+        prefix = self.home / "homebrew"
+        binary = prefix / "Cellar/bash/5.3/bin/bash"
+        binary.parent.mkdir(parents=True)
+        binary.write_text("#!/bin/sh\nexit 0\n")
+        binary.chmod(0o755)
+        stable = prefix / "bin/bash"
+        stable.parent.mkdir()
+        stable.symlink_to(binary)
+        with patch.object(cli.shutil, "which", return_value=str(stable)):
+            self.assertEqual(cli.select_bash(), str(stable.absolute()))
+            upgraded = prefix / "Cellar/bash/5.4/bin/bash"
+            upgraded.parent.mkdir(parents=True)
+            upgraded.write_bytes(binary.read_bytes())
+            upgraded.chmod(0o755)
+            stable.unlink()
+            stable.symlink_to(upgraded)
+            self.assertEqual(cli.select_bash(), str(stable.absolute()))
+
     def test_dry_run_does_not_create_state_or_hooks(self):
         self.assertEqual(self.run_cli("install", "--dry-run"), 0)
         self.assertEqual(list(self.home.iterdir()), [])

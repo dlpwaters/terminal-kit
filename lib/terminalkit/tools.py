@@ -808,7 +808,7 @@ def _ensure_extra_binary(name: str, manifest: dict, root: Path, bin_dir: Path,
 def _install_font(root: Path, home: Path, platform: dict, dry_run: bool) -> dict:
     spec_path = Path(__file__).resolve().parents[2] / "manifests" / "tools.json"
     manifest = json.loads(spec_path.read_text(encoding="utf-8"))
-    if platform.get("wsl"):
+    if platform.get("wsl") and not platform.get("display"):
         return _result("font", "unsupported", "Linux font files do not configure Windows Terminal; install the font in Windows explicitly", required=False)
     asset = manifest["fonts"]["jetbrains_mono"]
     if dry_run:

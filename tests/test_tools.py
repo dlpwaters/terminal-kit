@@ -52,6 +52,15 @@ class PlatformTests(unittest.TestCase):
 
 
 class ToolTests(unittest.TestCase):
+    def test_wsl_graphical_font_targets_linux_client_and_headless_needs_windows_font(self):
+        with tempfile.TemporaryDirectory() as temporary, \
+             patch.object(tools, "download", side_effect=AssertionError("dry-run downloaded")):
+            home = Path(temporary)
+            graphical = tools._install_font(home / "kit", home, {"os": "linux", "wsl": 2, "display": True}, True)
+            headless = tools._install_font(home / "kit", home, {"os": "linux", "wsl": 2, "display": False}, True)
+        self.assertEqual(graphical["status"], "skipped")
+        self.assertEqual(headless["status"], "unsupported")
+
     def test_intel_build_preview_is_read_only_and_other_hosts_skip_it(self):
         with patch.object(tools.subprocess, "run", side_effect=AssertionError("dry-run executed")), \
              patch.object(tools.subprocess, "check_output", side_effect=AssertionError("dry-run inspected Homebrew")):

@@ -84,7 +84,8 @@ def select_bash():
         if candidate:
             check = subprocess.run([candidate, "-c", 'test "$BASH_VERSINFO" -ge 4'], capture_output=True)
             if check.returncode == 0:
-                return str(Path(candidate).resolve())
+                # Keep Homebrew's stable bin link across Cellar upgrades.
+                return str(Path(candidate).absolute())
     raise Conflict("Modern Bash 4+ is missing; rerun install.sh after installing Bash")
 
 

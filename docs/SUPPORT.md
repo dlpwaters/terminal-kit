@@ -41,7 +41,7 @@ The optional `extras` module adds `tealdeer`, `ncdu`, and `tree`; Git TUIs are p
 
 Pi and OpenCode use isolated npm prefixes and a compatible Node/npm runtime; when no suitable runtime exists, the kit installs pinned Node through mise. The optional `python` module installs Python through the same kit-managed mise data directory. Hermes uses its official installer pinned to the inspected commit and keeps its normal user data at `~/.hermes`. It uses Hermes's supported managed uv/Python flow, disables setup, browser and computer-use stages, and never runs the gateway stage. Existing Hermes data is preserved, and an incompatible existing Hermes-managed Node is reported instead of removed. Authentication stays with the user. The desktop profile installs JetBrainsMono Nerd Font from its pinned
 release archive and retains the included license notice. Windows Terminal fonts
-must be installed on Windows; a WSL font result is reported as unsupported.
+must be installed on Windows. Graphical WSL installs also install the Linux-side font for Ghostty's Linux client; headless WSL reports that Windows font installation is a separate host action.
 
 Ghostty is installed only from a supported native package source: Arch,
 Homebrew, or Ubuntu 26.04's official repository. No community repository or
