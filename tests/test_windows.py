@@ -20,7 +20,7 @@ class WindowsFragmentRemovalTests(unittest.TestCase):
 
     def test_removes_only_receipted_owned_fragment(self):
         with tempfile.TemporaryDirectory(prefix="kit-remove-") as tmp:
-            home = Path(tmp)
+            home = Path(tmp).resolve()
             target, receipt = self._owned_fragment(home)
             result = remove_fragment(home)
             self.assertEqual(result["status"], "removed")
@@ -29,7 +29,7 @@ class WindowsFragmentRemovalTests(unittest.TestCase):
 
     def test_edited_fragment_and_receipt_are_preserved(self):
         with tempfile.TemporaryDirectory(prefix="kit-remove-") as tmp:
-            home = Path(tmp)
+            home = Path(tmp).resolve()
             target, receipt = self._owned_fragment(home)
             target.write_text('{"profiles": ["user edit"]}\n', encoding="utf-8")
             with self.assertRaisesRegex(Conflict, "edited"):
@@ -39,7 +39,7 @@ class WindowsFragmentRemovalTests(unittest.TestCase):
 
     def test_receipt_path_outside_owned_fragment_is_rejected(self):
         with tempfile.TemporaryDirectory(prefix="kit-remove-") as tmp:
-            home = Path(tmp)
+            home = Path(tmp).resolve()
             receipt = home / ".local/state/terminal-kit/windows-host.json"
             target = home / "important.json"
             target.write_text("safe\n", encoding="utf-8")
@@ -54,7 +54,7 @@ class WindowsFragmentRemovalTests(unittest.TestCase):
 
     def test_redirected_localappdata_and_read_only_preflight(self):
         with tempfile.TemporaryDirectory(prefix="kit-remove-") as tmp:
-            home = Path(tmp)
+            home = Path(tmp).resolve()
             root = home / "redirected Windows data"
             target = root / "Microsoft/Windows Terminal/Fragments/terminal-kit/terminal-kit.json"
             target.parent.mkdir(parents=True)

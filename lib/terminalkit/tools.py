@@ -88,7 +88,9 @@ def _pkg_command(pm: str, package: str, unattended: bool) -> list[str]:
     if pm == "pacman":
         return ["pacman", "-S", "--needed", *( ["--noconfirm"] if unattended else []), package]
     if pm == "brew":
-        return ["brew", "install", "--force-bottle", package]
+        # Verified release fallbacks avoid large source builds on Tier 3 Macs.
+        bottle_only = package in ("neovim", "fzf", "eza", "zoxide", "starship", "lazygit", "lazydocker")
+        return ["brew", "install", *(["--force-bottle"] if bottle_only else []), package]
     raise ValueError(f"Unsupported package manager: {pm}")
 
 
@@ -463,17 +465,6 @@ def _ensure_mise(manifest: dict, root: Path, bin_dir: Path, platform: dict, dry_
         version, _ = _version("mise", ["--version"])
         if existing and version:
             return Path(existing), _result("mise", "reused", "Preserving host-managed mise", version=version, path=existing, ownership="existing")
-        if dry_run:
-            return None, _result("mise", "skipped", "Dry run: brew install mise", required=False)
-        try:
-            proc = _run_native(["brew", "install", "--force-bottle", "mise"], "brew", False)
-            existing = shutil.which("mise")
-            version, _ = _version("mise", ["--version"])
-            if proc.returncode or not existing or not version:
-                return None, _result("mise", "failed", "Homebrew did not provide a working mise", required=False)
-            return Path(existing), _result("mise", "installed", "Installed mise with Homebrew", version=version, path=existing, ownership="brew")
-        except Exception as exc:
-            return None, _result("mise", "failed", str(exc), required=False)
     if not asset:
         return None, _result("mise", "unsupported", f"No pinned mise artifact for {_asset_key(platform)}", required=False)
     executable = root / "tools" / "mise" / "mise"

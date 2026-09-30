@@ -334,7 +334,7 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(result["status"], "skipped")
             self.assertIn("update kit-owned", result["detail"])
             self.assertEqual(binary.read_text(encoding="utf-8"), "old pinned binary")
-            self.assertEqual((bin_dir / "fzf").resolve(), binary)
+            self.assertEqual((bin_dir / "fzf").resolve(), binary.resolve())
 
     def test_optional_binary_prefers_supported_native_package_before_asset(self):
         with tempfile.TemporaryDirectory() as temporary:

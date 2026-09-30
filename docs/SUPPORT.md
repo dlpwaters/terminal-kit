@@ -28,6 +28,7 @@ directory. It does not run a full system upgrade. Native package installation us
 the normal sudo authorization path on Linux; unattended runs require existing
 `sudo -n` authorization. Homebrew package operations use Homebrew; its first-run
 official bootstrap may require macOS authorization or Command Line Tools.
+Intel Macs may build small native dependencies such as Bash with Homebrew. Neovim and the larger Rust/Go terminal tools use bottle-only attempts followed by pinned upstream release binaries; mise also has verified macOS release binaries. Missing bottles do not trigger an implicit Neovim or Rust application source build.
 `--dry-run` only reports package commands and does not bootstrap Homebrew.
 
 Package availability and versions vary by distribution. The manifest records

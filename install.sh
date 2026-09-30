@@ -70,7 +70,10 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ] && [ "$tk_dry" -eq 0 ]; then
     echo 'Bash 4+ is required; install modern Bash with your package manager.' >&2; exit 2
   fi
   tk_bash="$tk_prefix/bin/bash"
-  if [ ! -x "$tk_bash" ]; then "$tk_brew" install --force-bottle bash; fi
+  if [ ! -x "$tk_bash" ]; then
+    echo 'Installing modern Bash with Homebrew; Intel Macs may build this small shell dependency from source.'
+    "$tk_brew" install bash
+  fi
   exec "$tk_bash" "$tk_root/install.sh" "$@"
 fi
 exec "$tk_root/bin/terminal-kit" install "$@"
