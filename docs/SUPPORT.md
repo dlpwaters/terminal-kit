@@ -58,13 +58,13 @@ application can launch. Those desktop paths need separate live validation.
 | Check | Current evidence (2026-09-30) |
 | --- | --- |
 | ShellCheck and Bash syntax | Passed |
-| Python unit tests | Host: 76/76 passed. Container: 75 passed, 1 skipped because Ghostty is unavailable (the host Ghostty validator test passed). |
+| Python unit tests | Host: 83/83 passed. Container: 82 passed, 1 skipped because Ghostty is unavailable (the host Ghostty validator test passed). |
 | Bats checks | 8 passed |
 | Isolated tmux layout | Passed in container |
-| Debian 12 x86_64 | Interrupted-install recovery, explicit `--with treesitter-build`, parsers/LSPs/agents, doctor, rollback, and uninstall passed. Clean default-profile CI remains pending; without the opt-in it should report partial Tree-sitter availability. |
+| Debian 12 x86_64 | Clean CI and local recovery with explicit `--with treesitter-build`, parsers/LSPs/agents, doctor, rollback, and uninstall passed. Without the opt-in, older-glibc Tree-sitter availability is reported as partial. |
 | Ubuntu 24.04.5 | Fresh install, repeated doctor, rollback, and uninstall passed |
 | Fedora 44 | Fresh install, repeated doctor, rollback, and uninstall passed |
-| macOS CI | Not run |
+| macOS CI | Regression checks passed on macOS 15 Apple Silicon and Intel. Real Apple Silicon 15.7.9 headless fresh/repeat/doctor/rollback/uninstall passed; explicit Intel build acceptance is running. |
 | Native desktop / Windows WSL physical checks | Pending |
 | Release bootstrap | Private `v0.1.0` release not published; authenticated release path not yet exercised |
 

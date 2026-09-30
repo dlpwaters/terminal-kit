@@ -10,6 +10,27 @@ The Neovim package is maintained separately in [omacom-io/omarchy-pkgs](https://
 
 ## Reuse decisions
 
+The following paths identify the copied or adapted material. Omarchy paths refer
+to the pinned v4.0.4 commit above; editor paths refer to the independently pinned
+package artifact. The corresponding upstream notices are retained under
+`licenses/third-party/` and `configs/nvim/LICENSE`.
+
+| Inspected upstream paths | Kit paths | Adaptation and license |
+| --- | --- | --- |
+| `default/bash/{aliases,completions,env-bootstrap,envs,inputrc,rc,shell,functions,init}` | `configs/bash/{aliases,completions,env,inputrc,rc}` | Portable aliases, history, completion, input bindings and integrations; guarded includes replace distribution startup paths. Omarchy MIT. |
+| `default/bash/fns/{tmux,worktrees,compression}` | `configs/bash/aliases`, `lib/terminalkit/layouts.py` | Explicit sessions/layouts, safe worktree creation and tar helpers. Agent selection replaces distribution launchers; destructive worktree removal is excluded. Omarchy MIT. |
+| `config/tmux/tmux.conf` | `configs/tmux.conf.tmpl` | Prefix, navigation, splits, resizing and copy mode retained; local theme/clipboard commands replace distro dependencies. Omarchy MIT. |
+| `config/ghostty/config` | `configs/ghostty.conf.tmpl` | Font, padding, cursor, palette and transferable keys retained; detected Bash and a self-contained theme replace fixed paths. Omarchy MIT. |
+| `config/starship.toml`, `themes/*/colors.toml`, `themes/*/neovim.lua` | `configs/starship.toml`, `configs/themes.json`, `configs/nvim/lua/plugins/theme.lua.tmpl` | Local palettes and editor theme choices; no desktop theme service, backgrounds or theme hot reload. Omarchy MIT; installed editor theme plugins retain their own notices. |
+| `/etc/skel/.config/nvim/{init.lua,lazyvim.json,stylua.toml,lua/config/*}` | `configs/nvim/` | Actual package foundation retained. Kit-owned paths, bounded clipboard and local overrides replace distro paths; `remote_clipboard.lua` is replaced. LazyVim Starter Apache-2.0 and package-owned Omarchy MIT material. |
+| `/etc/skel/.config/nvim/lua/plugins/{disable-news-alert.lua,snacks-animated-scrolling-off.lua,all-themes.lua,theme.lua,omarchy-theme-hotreload.lua}` | `configs/nvim/lua/plugins/` | Two portable settings retained; managed theme selection replaces distro theme/hot-reload files. Omarchy MIT. |
+| `/etc/skel/.config/nvim/lazy-lock.json` | `configs/nvim/lazy-lock.json` | Original plugin commits retained, with the two explicitly pinned additions described above. Plugins are downloaded individually with their own licenses; the package cache is not bundled. |
+
+Terminal Kit's state, download, platform, installation and management modules are
+new code rather than copies of Omarchy's full installer. The feature-by-feature
+classification, including omitted helper dependencies, is in
+[INVENTORY.md](INVENTORY.md).
+
 | Area | Decision | Audit boundary |
 | --- | --- | --- |
 | Bash defaults and core commands | Include/adapt | Both profiles require Bash, Git, GitHub CLI, tmux, ripgrep, fd, bat, btop, jq, archive/network/build prerequisites and the shell integrations used by the editor/agents. Reuse portable Omarchy aliases/functions; remove distro paths and desktop hooks. Terminal apps inherit the detected Bash via `SHELL`; Pi also gets its documented `shellPath` setting, while OpenCode reads `process.env.SHELL` in its pinned [shell implementation](https://github.com/anomalyco/opencode/blob/v1.18.33/packages/core/src/shell.ts). |

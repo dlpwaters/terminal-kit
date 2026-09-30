@@ -1,21 +1,20 @@
 # Project status
 
-**Snapshot: 2026-09-30.** Terminal Kit's implementation and support documentation are in an unpublished private repository. Release `v0.1.0` and its authenticated bootstrap are not yet available; use a reviewed checkout with `./install.sh`.
+Snapshot: 2026-09-30. The private repository is on GitHub at [dlpwaters/terminal-kit](https://github.com/dlpwaters/terminal-kit). Initial release packaging is awaiting final acceptance; authentication is intentionally left to the user.
 
-Debian 12 x86_64 passed interrupted-install recovery, explicit `--with treesitter-build`, parser/LSP and agent checks, doctor, rollback, and uninstall. The optional build pins tree-sitter-cli `0.26.1` source commit `8a3dcc6155a9faae677544303b6bc0caf1aef296` (source archive SHA-256 `ca739fcb6fdb9cf2312d687332282040f088ea5c517a65ea98f980a861babc27`) and Rust `1.92.0`; locked dependencies require this newer compiler, while all Rust/Cargo data remains in Terminal Kit's managed runtime. It requests the native libclang development package and uses `cargo install --locked --jobs 2`; it does not update core libraries. Pi `0.99.1`, Hermes `0.21.5` (release tag `2026.9.24`), and OpenCode `1.18.33` were verified. A clean Debian 12 check without the opt-in is still pending; that run should report partial Tree-sitter availability honestly.
+The CLI implementation includes the Omarchy v4.0.4 terminal baseline and independently pinned Omarchy Neovim package, user-owned configuration/recovery, required tools and all three agent CLIs. Debian 12 needs the explicit `treesitter-build` option; Intel macOS needs `intel-build` with current upstream packages. Both use isolated Rust 1.92.0 and preserve security/system-library boundaries.
 
-| Check | State |
+| Check | Observed state |
 | --- | --- |
-| ShellCheck and Bash syntax | Passed |
-| Python unit tests | Host: 76/76 passed. Container: 75 passed, 1 skipped because Ghostty is unavailable (the host Ghostty validator test passed). |
-| Bats integration checks | 8 passed |
-| Isolated tmux layout | Passed in container |
-| Debian 12 x86_64 full install/recovery | Interrupted setup recovered; explicit Tree-sitter build, parsers/LSPs/agents, doctor, rollback, uninstall passed |
-| Debian 12 clean default profile | Pending; should expose missing glibc-compatible Tree-sitter CLI as a partial result without the explicit source build |
-| Ubuntu 24.04.5 | Fresh install, repeat doctor, rollback, uninstall passed |
-| Fedora 44 | Fresh install, repeat doctor, rollback, uninstall passed |
-| macOS CI | Not run |
-| Native GUI / Windows WSL physical acceptance | Pending |
-| Private release publication and bootstrap | Pending |
+| ShellCheck, Bash syntax, Bats | Passed; 8 Bats checks |
+| Python regression tests | 83/83 on the host; container/macOS checks skip the Ghostty validator when the app is unavailable |
+| Ubuntu 24.04.5 x86_64 | Fresh/repeat install, agents, locked LazyVim/parsers/language tools, doctor, scoped tool/config updates, rollback and uninstall passed |
+| Debian 12 x86_64 | Local interrupted setup recovered; clean GitHub CI with `--with treesitter-build`, repeat/doctor/rollback/uninstall passed |
+| Fedora 44 x86_64 | Fresh/repeat install, agents/editor, doctor, rollback and uninstall passed |
+| macOS 15.7.9 Apple Silicon | Real headless fresh/repeat install, agents/editor, doctor, rollback and uninstall passed |
+| macOS 15 Intel | Regression checks passed; real installation with the explicit `intel-build` module is running |
+| Ghostty | Host 1.3.1 config validator passed; GUI/font/physical keyboard/clipboard checks remain manual |
+| Windows/WSL and Linux ARM | Detection/config tests exist; real host installation/rendering remains unobserved |
+| Release bootstrap | Publication/remote artifact acceptance pending |
 
-Next: run clean Debian 12 default-profile CI, macOS CI, then complete native desktop/Windows WSL checks from [Manual checks](MANUAL-CHECKS.md). Update this table only with observed results.
+CLI code acceptance is [Check](https://github.com/dlpwaters/terminal-kit/actions/workflows/check.yml); real Mac installs are [Platform acceptance](https://github.com/dlpwaters/terminal-kit/actions/workflows/workstation.yml). Desktop and Windows checks are in [MANUAL-CHECKS.md](MANUAL-CHECKS.md). No credential provisioning, paid model requests, host desktop settings, or live host services were changed during development.
