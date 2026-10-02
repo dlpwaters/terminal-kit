@@ -27,7 +27,8 @@ The `fix/debian-package-prompts` branch corrects a reproduced input failure in t
 - The unchanged release input path fails the actual needrestart/debconf checklist test on Debian 13 with sudo `1.9.16p2-3+deb13u2` and needrestart `3.11-1`; the corrected path passes.
 - `scripts/check.sh` passes in Debian 12 and 13: 91 Python tests (the unavailable Ghostty validator is skipped), eight Bats checks, shell syntax, ShellCheck and runtime/credential-pattern audit.
 - Four real sudo tests pass on both versions: the needrestart/debconf checklist, direct whiptail checklist, redirected-stdin fallback, and an explicit list-only mode override despite caller automatic mode. No test calls a service restart.
-- Debian 13 joins the full-install CI matrix. Full fresh/repeat installation results and recovery on the reported desktop remain pending.
+- Fresh/repeat headless installation, agent/editor checks, doctor, rollback and uninstall passed on Debian 12, Debian 13 and Ubuntu 24.04 in [GitHub CI](https://github.com/dlpwaters/terminal-kit/actions/runs/37044855757). All six jobs passed.
+- The corrected source installer is reported to have completed on the affected desktop. A fresh-terminal doctor check and remote reconnection remain manual.
 
 The existing public bootstrap still downloads `v0.1.0`, which predates this fix. Use the corrected checkout only after the earlier apt/dpkg/installer processes have exited. The next release must include these changes before the pinned bootstrap can use them.
 
