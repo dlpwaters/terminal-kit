@@ -16,6 +16,7 @@ from .platforms import detect
 from .state import Conflict, State, atomic_write, fingerprint, lock, write_json
 
 REPO = Path(__file__).resolve().parents[2]
+PI_SETTINGS = ".pi/agent/settings.json"
 PROFILES = {
     "minimal": ["cli", "configs"],
     "headless": ["cli", "runtimes", "agents", "configs", "nvim"],
@@ -91,6 +92,8 @@ def select_bash():
 
 def apply_configs(state, repo, facts, modules, theme="tokyo-night"):
     from .configs import build_configs
+    # Pi saves its own preferences; older kit seeds must become user-owned.
+    state.data["files"].pop(PI_SETTINGS, None)
     bash = select_bash()
     for relative, content, mode in build_configs(repo, state.home, bash, facts, theme):
         if "configs" not in modules and not any(m in modules for m in ("bash", "tmux", "nvim", "ghostty")):
@@ -108,9 +111,17 @@ def apply_configs(state, repo, facts, modules, theme="tokyo-night"):
         if baseline.exists() and not mutable.exists():
             atomic_write(mutable, baseline.read_bytes())
     if "agents" in modules or "pi" in modules:
-        path = state.home / ".pi/agent/settings.json"
+        path = state.home / PI_SETTINGS
         if not path.exists() and not path.is_symlink():
-            state.apply(".pi/agent/settings.json", (json.dumps({"shellPath": bash}, indent=2) + "\n").encode(), 0o600)
+            path = state.destination(PI_SETTINGS)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            except FileExistsError:
+                pass
+            else:
+                with os.fdopen(fd, "w") as output:
+                    output.write(json.dumps({"shellPath": bash}, indent=2) + "\n")
     local = state.home / ".config/terminal-kit/local"
     local.mkdir(parents=True, exist_ok=True)
     for name, content in {"bash.sh": "# Your Bash overrides.\n", "tmux.conf": "# Your tmux overrides.\n", "ghostty.conf": "# Your Ghostty overrides.\n", "nvim.lua": "-- Your Neovim overrides.\n"}.items():
@@ -257,6 +268,8 @@ def doctor(args):
     checks = live_checks(home, installed, REPO)
     state = State(home)
     for relative, entry in state.data["files"].items():
+        if relative == PI_SETTINGS:
+            continue  # Legacy ownership; JSON syntax is checked below.
         path = state.destination(relative)
         if entry["hook"]:
             pattern = r"(?ms)^# >>> terminal-kit managed include >>>\n.*?^# <<< terminal-kit managed include <<<\n?"
@@ -431,6 +444,7 @@ def main(argv=None):
             elif args.command == "uninstall":
                 from .windows import remove_fragment
                 remove_fragment(state.home, dry_run=True)
+                state.data["files"].pop(PI_SETTINGS, None)
                 state.uninstall(strip_hook)
                 remove_fragment(state.home)
                 print("Owned configuration removed; original files restored. Shared packages, user overrides, all agent data, and runtimes retained.")

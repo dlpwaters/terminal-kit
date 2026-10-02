@@ -29,9 +29,13 @@ On Debian 12 and other older-glibc Linux hosts, the upstream Tree-sitter executa
 
 Use `terminal-kit auth pi`, `terminal-kit auth hermes`, or `terminal-kit auth opencode` to enter the tool's interactive login flow. Pi uses `/login` inside Pi. Authentication is user-managed; `doctor` does not inspect credentials or verify provider access. If the command is missing, check the install receipt and rerun the selected agent module from a reviewed checkout.
 
+Pi saves preferences in `~/.pi/agent/settings.json`. The corrected checkout leaves that file user-owned and preserves it during repeat installation and uninstall. Older builds can report normal Pi changes as “Managed file edited”; update from the corrected source instead of resetting the file. Invalid JSON still fails the syntax check. Edits to kit-owned configuration still require the local override layer.
+
 ## Ghostty, fonts, and WSL
 
 Ghostty availability depends on a supported native package source. The installer does not add a community repository or build it from source. WSL2 is supported as a Linux environment; WSLg launch and Windows Terminal rendering are separate host checks. Install Windows Terminal fonts on Windows with `windows/Install-Font.ps1`; installing them inside WSL is not sufficient.
+
+The published `v0.1.0` font installer rejects the pinned JetBrainsMono ZIP because its 80 MiB download and 150 MiB extraction limits are too small. The verified archive is 133,975,870 bytes and expands to 243,185,440 bytes. The corrected checkout uses bounded 160 MiB/300 MiB limits and retains SHA-256 verification and the OFL notice. Retry the font and update the installed kit from a reviewed checkout with `terminal-kit update --source PATH --apply`; this preserves the installation's selected modules.
 
 If clipboard reports unavailable, check `terminal-kit doctor` for the detected backend and ensure the host clipboard tool/session is present. SSH and headless sessions do not imply a desktop clipboard or GUI.
 

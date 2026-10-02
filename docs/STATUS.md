@@ -28,9 +28,17 @@ The `fix/debian-package-prompts` branch corrects a reproduced input failure in t
 - `scripts/check.sh` passes in Debian 12 and 13: 91 Python tests (the unavailable Ghostty validator is skipped), eight Bats checks, shell syntax, ShellCheck and runtime/credential-pattern audit.
 - Four real sudo tests pass on both versions: the needrestart/debconf checklist, direct whiptail checklist, redirected-stdin fallback, and an explicit list-only mode override despite caller automatic mode. No test calls a service restart.
 - Fresh/repeat headless installation, agent/editor checks, doctor, rollback and uninstall passed on Debian 12, Debian 13 and Ubuntu 24.04 in [GitHub CI](https://github.com/dlpwaters/terminal-kit/actions/runs/37044855757). All six jobs passed.
-- The corrected source installer is reported to have completed on the affected desktop. A fresh-terminal doctor check and remote reconnection remain manual.
+- The corrected source installer completed on the reported desktop. Its doctor output confirmed the core tools, all three agents, LazyVim startup and tmux configuration; it exposed the font-limit and Pi-ownership issues below. Remote reconnection remains manual.
 
 The existing public bootstrap still downloads `v0.1.0`, which predates this fix. Use the corrected checkout only after the earlier apt/dpkg/installer processes have exited. The next release must include these changes before the pinned bootstrap can use them.
+
+### Font and Pi preferences follow-up
+
+The workstation font's pinned ZIP is 133,975,870 bytes and expands to 243,185,440 bytes; both exceeded the old limits. The follow-up retains the existing SHA-256 pin and bounded extraction, raising those limits to 160 MiB/300 MiB. The real archive installed into an isolated home with 96 font files and its OFL notice; Fontconfig recognized the regular Nerd Font family. Host fonts were not changed.
+
+Pi settings are seeded once as user-owned preferences. Normal Pi edits no longer fail doctor, repeat installation or uninstall, including settings tracked by older kit installs. Invalid JSON and edits to actual kit-owned files still fail their checks. The required isolated suite passed: 96 Python tests (one unavailable Ghostty-validator skip), eight Bats checks, Bash syntax, ShellCheck and runtime/credential-pattern audit. Full local Debian 13 acceptance passed fresh/repeat installation with the real font, all four native sudo/dialog tests, doctor, agent/editor checks, rollback and uninstall while preserving edited Pi preferences. Updated GitHub CI remains pending. Debian 13 container acceptance now installs the real font; all container targets exercise edited Pi settings.
+
+Apply the follow-up from the corrected source with `terminal-kit update --source PATH --apply`, then run `terminal-kit doctor`. Font rendering and the final doctor result on the affected desktop remain manual.
 
 ## Intel Mac follow-up
 

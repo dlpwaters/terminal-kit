@@ -10,6 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from terminalkit import platforms, tools
+from terminalkit.download import DownloadError
 
 
 class PlatformTests(unittest.TestCase):
@@ -87,6 +88,31 @@ class ToolTests(unittest.TestCase):
             headless = tools._install_font(home / "kit", home, {"os": "linux", "wsl": 2, "display": False}, True)
         self.assertEqual(graphical["status"], "skipped")
         self.assertEqual(headless["status"], "unsupported")
+
+    def test_font_accepts_pinned_archive_size_and_retains_license(self):
+        # Official v3.5.1 ZIP size and the sum of its member sizes.
+        def fetch(url, destination, sha256, max_bytes):
+            if max_bytes < 133975870:
+                raise DownloadError("Download exceeds size limit")
+            return destination
+
+        def extract(archive, destination, max_bytes):
+            if max_bytes < 243185440:
+                raise DownloadError("Archive exceeds extraction limits")
+            destination.mkdir(parents=True)
+            (destination / "JetBrainsMonoNerdFont-Regular.ttf").write_bytes(b"font fixture")
+            (destination / "OFL.txt").write_text("license fixture")
+
+        with tempfile.TemporaryDirectory() as temporary, \
+             patch.object(tools, "download", side_effect=fetch), \
+             patch.object(tools, "safe_extract", side_effect=extract), \
+             patch.object(tools.shutil, "which", return_value=None):
+            home = Path(temporary)
+            result = tools._install_font(home / "kit", home, {"os": "linux"}, False)
+            self.assertEqual(result["status"], "installed", result["detail"])
+            destination = Path(result["path"])
+            self.assertEqual((destination / "JetBrainsMonoNerdFont-Regular.ttf").read_bytes(), b"font fixture")
+            self.assertEqual((destination / "OFL.txt").read_text(), "license fixture")
 
     def test_intel_build_preview_is_read_only_and_other_hosts_skip_it(self):
         with patch.object(tools.subprocess, "run", side_effect=AssertionError("dry-run executed")), \

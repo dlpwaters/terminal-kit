@@ -42,6 +42,8 @@ You can rerun `bash install.sh` after an interrupted or partial installation. Co
 
 **Debian 13 restart-prompt fix:** the published `v0.1.0` archive can display an apt service-restart checklist that ignores keyboard input. The `fix/debian-package-prompts` checkout preserves the terminal input expected by Debian's sudo and defers `needrestart` service restarts during kit package operations. Use that corrected checkout after the previous installer has exited; downloading `v0.1.0` again still uses the old code. See [recovery guidance](docs/TROUBLESHOOTING.md). No OS upgrade or terminal replacement is required for this fix.
 
+That checkout also corrects the font archive limits and treats Pi's settings as user-owned preferences. Update an existing installation with `terminal-kit update --source /path/to/corrected-checkout --apply` to preserve its selected modules and retry the font. Existing Pi preferences remain intact.
+
 ### Prerequisites and profiles
 
 The entry script works under stock macOS Bash 3.2 and installs/reexecutes modern Bash when needed. The CLI requires Bash 4+ and Python 3.9+. It reuses compatible runtimes and bootstraps missing prerequisites through the platform package manager; it does not replace the system Python. For a strictly read-only plan, those prerequisites must already be available.

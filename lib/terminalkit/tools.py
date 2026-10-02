@@ -862,12 +862,12 @@ def _install_font(root: Path, home: Path, platform: dict, dry_run: bool) -> dict
         return _result("font", "skipped", f"Dry run: download {asset['url']} (SHA-256 pinned)", required=False)
     cache = root / "cache" / "JetBrainsMono.zip"
     try:
-        download(asset["url"], cache, asset["sha256"], max_bytes=80 * 1024 * 1024)
+        download(asset["url"], cache, asset["sha256"], max_bytes=160 * 1024 * 1024)
         destination = (Path(home) / "Library" / "Fonts" / "Terminal Kit") if platform.get("os") == "macos" else (Path(home) / ".local" / "share" / "fonts" / "terminal-kit")
         stage = root / "font-stage"
         if stage.exists():
             shutil.rmtree(stage)
-        safe_extract(cache, stage, max_bytes=150 * 1024 * 1024)
+        safe_extract(cache, stage, max_bytes=300 * 1024 * 1024)
         files = [p for p in stage.rglob("*") if p.is_file() and p.suffix.lower() in (".ttf", ".otf", ".txt", ".md", ".ofl")]
         if not any(p.suffix.lower() in (".ttf", ".otf") for p in files) or not any("license" in p.name.lower() or "ofl" in p.name.lower() for p in files):
             return _result("font", "failed", "Pinned Nerd Fonts archive is missing fonts or its license notice", required=False)
