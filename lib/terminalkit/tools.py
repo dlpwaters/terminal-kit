@@ -128,18 +128,27 @@ def _run_native(command: list[str], pm: str, unattended: bool, *, timeout: int =
     sudo = shutil.which("sudo")
     if not sudo:
         return subprocess.CompletedProcess(command, 1, "", "sudo is unavailable")
+    if pm == "apt":
+        # Terminal setup must not restart unrelated desktop/network services.
+        # Pass this after sudo so env_reset cannot drop the override.
+        command = ["env", "NEEDRESTART_MODE=l", *command]
     if unattended:
         probe = subprocess.run([sudo, "-n", "true"], check=False, capture_output=True, timeout=5)
         if probe.returncode:
             return subprocess.CompletedProcess(command, 1, "", "Unattended install requires pre-authorized sudo -n")
         command = [sudo, "-n", *command]
     else:
-        if not Path("/dev/tty").exists():
-            return subprocess.CompletedProcess(command, 1, "", "Native package operation requires an interactive terminal")
         command = [sudo, *command]
-        with open("/dev/tty", "rb", buffering=0) as tty:
-            return subprocess.run(command, stdin=tty, check=False, timeout=1800)
-    return subprocess.run(command, check=False, timeout=1800)
+        if os.isatty(0):
+            return subprocess.run(command, check=False, timeout=timeout)
+        # Debian 13's sudo misidentifies /dev/tty as redirected input. Use the
+        # actual terminal device when stdin is a pipe or /dev/null.
+        for fd in (1, 2):
+            if os.isatty(fd):
+                with open(os.ttyname(fd), "rb", buffering=0) as tty:
+                    return subprocess.run(command, stdin=tty, check=False, timeout=timeout)
+        return subprocess.CompletedProcess(command, 1, "", "Native package operation requires an interactive terminal")
+    return subprocess.run(command, check=False, timeout=timeout)
 
 
 def _package_installed(package: str, pm: str) -> bool | None:

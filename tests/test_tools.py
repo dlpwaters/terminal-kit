@@ -53,6 +53,32 @@ class PlatformTests(unittest.TestCase):
 
 
 class ToolTests(unittest.TestCase):
+    def test_apt_defers_service_restarts_even_when_caller_requests_automatic_mode(self):
+        with patch.object(tools.os, "geteuid", return_value=1000), \
+             patch.object(tools.shutil, "which", return_value="/usr/bin/sudo"), \
+             patch.dict(os.environ, {"NEEDRESTART_MODE": "a"}), \
+             patch.object(tools.subprocess, "run", return_value=tools.subprocess.CompletedProcess([], 0)) as run:
+            tools._run_native(["apt-get", "install", "-y", "tmux"], "apt", True, timeout=12)
+        self.assertEqual(run.call_args.args[0], ["/usr/bin/sudo", "-n", "env", "NEEDRESTART_MODE=l", "apt-get", "install", "-y", "tmux"])
+        self.assertEqual(run.call_args.kwargs["timeout"], 12)
+
+    def test_non_apt_packages_keep_their_existing_environment_policy(self):
+        with patch.object(tools.os, "geteuid", return_value=1000), \
+             patch.object(tools.shutil, "which", return_value="/usr/bin/sudo"), \
+             patch.object(tools.subprocess, "run", return_value=tools.subprocess.CompletedProcess([], 0)) as run:
+            tools._run_native(["dnf", "install", "-y", "tmux"], "dnf", True)
+        self.assertEqual(run.call_args.args[0], ["/usr/bin/sudo", "-n", "dnf", "install", "-y", "tmux"])
+
+    def test_interactive_package_operation_without_a_terminal_fails_before_sudo(self):
+        with patch.object(tools.os, "geteuid", return_value=1000), \
+             patch.object(tools.shutil, "which", return_value="/usr/bin/sudo"), \
+             patch.object(tools.os, "isatty", return_value=False), \
+             patch.object(tools.subprocess, "run") as run:
+            result = tools._run_native(["apt-get", "install", "-y", "tmux"], "apt", False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("interactive terminal", result.stderr)
+        run.assert_not_called()
+
     def test_wsl_graphical_font_targets_linux_client_and_headless_needs_windows_font(self):
         with tempfile.TemporaryDirectory() as temporary, \
              patch.object(tools, "download", side_effect=AssertionError("dry-run downloaded")):

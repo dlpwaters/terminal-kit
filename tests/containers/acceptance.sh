@@ -14,6 +14,7 @@ tk_failure_report() {
 }
 trap tk_failure_report EXIT
 ./scripts/check.sh
+python3 tests/containers/native_prompts.py
 tk_extra=()
 if [ -r /etc/debian_version ] && [ "$(cut -d . -f 1 /etc/debian_version)" = 12 ]; then
   tk_extra=(--with treesitter-build)

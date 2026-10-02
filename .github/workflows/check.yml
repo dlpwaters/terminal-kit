@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [debian:12, ubuntu:24.04]
+        distro: [debian:12, debian:13, ubuntu:24.04]
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

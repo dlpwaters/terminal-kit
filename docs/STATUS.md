@@ -20,6 +20,17 @@ The CLI implementation includes the Omarchy v4.0.4 terminal baseline and indepen
 
 All five jobs in the [release commit's Check run](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940463) passed. [Platform acceptance](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940262) completed: Apple Silicon passed, Intel failed. Desktop and Windows checks are in [MANUAL-CHECKS.md](MANUAL-CHECKS.md). No credential provisioning, paid model requests, host desktop settings, or live host services were changed during development.
 
+## Debian 13 interactive package prompts
+
+The `fix/debian-package-prompts` branch corrects a reproduced input failure in the published `v0.1.0` installer. Reopening `/dev/tty` for sudo caused Debian 13's checklist to draw while ignoring Tab/Enter and echoing the keys. Native package operations now inherit existing terminal input, or open the real terminal device when stdin is redirected. Apt operations, including the Python bootstrap, also defer `needrestart` service restarts for that operation.
+
+- The unchanged release input path fails the actual needrestart/debconf checklist test on Debian 13 with sudo `1.9.16p2-3+deb13u2` and needrestart `3.11-1`; the corrected path passes.
+- `scripts/check.sh` passes in Debian 12 and 13: 91 Python tests (the unavailable Ghostty validator is skipped), eight Bats checks, shell syntax, ShellCheck and runtime/credential-pattern audit.
+- Four real sudo tests pass on both versions: the needrestart/debconf checklist, direct whiptail checklist, redirected-stdin fallback, and an explicit list-only mode override despite caller automatic mode. No test calls a service restart.
+- Debian 13 joins the full-install CI matrix. Full fresh/repeat installation results and recovery on the reported desktop remain pending.
+
+The existing public bootstrap still downloads `v0.1.0`, which predates this fix. Use the corrected checkout only after the earlier apt/dpkg/installer processes have exited. The next release must include these changes before the pinned bootstrap can use them.
+
 ## Intel Mac follow-up
 
 Further implementation/testing was deferred at the user's request. Start with the completed [Intel job and its log](https://github.com/dlpwaters/terminal-kit/actions/runs/36772940262/job/110083639561), using the release source above. This is a known partial installation, not accepted Intel support.
