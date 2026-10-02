@@ -57,7 +57,7 @@ if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import sys; sys.exit(sy
       sudo -n true || { echo 'Python bootstrap requires pre-authorized sudo -n.' >&2; exit 2; }
     fi
     if command -v apt-get >/dev/null 2>&1; then
-      sudo apt-get install -y python3
+      sudo env NEEDRESTART_MODE=l apt-get install -y python3
     elif command -v dnf >/dev/null 2>&1; then
       sudo dnf install -y python3
     elif command -v pacman >/dev/null 2>&1; then

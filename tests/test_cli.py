@@ -9,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 from terminalkit import cli
+from terminalkit.state import State
 
 FACTS = {"os": "linux", "distro": "debian", "version": "12", "arch": "x86_64", "pm": "apt", "supported": True, "display": False, "ssh": False, "wsl": 0}
 
@@ -91,6 +92,61 @@ class InstallTests(unittest.TestCase):
             path.write_text("export CUSTOM=1\n")
             self.assertEqual(self.run_cli("doctor"), 1)
 
+    def test_pi_preferences_are_user_owned_and_survive_repeat_rollback_uninstall(self):
+        self.assertEqual(self.run_cli("install", "--modules", "pi"), 0)
+        receipt = cli.read_install(self.home)
+        path = self.home / ".pi/agent/settings.json"
+        self.assertEqual(json.loads(path.read_text())["shellPath"], receipt["bash"])
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+        preferences = json.dumps({"shellPath": receipt["bash"], "theme": "dark", "lastChangelogVersion": "1.0.0"})
+        path.write_text(preferences)
+        with patch("terminalkit.checks.live_checks", return_value=[]):
+            self.assertEqual(self.run_cli("doctor"), 0)
+        self.assertEqual(self.run_cli("install", "--modules", "pi"), 0)
+        receipt = cli.read_install(self.home)
+        self.assertEqual(self.run_cli("rollback", receipt["backup"]), 0)
+        self.assertEqual(self.run_cli("uninstall"), 0)
+        self.assertEqual(path.read_text(), preferences)
+
+    def legacy_pi_preferences(self):
+        self.assertEqual(self.run_cli("install", "--modules", "pi"), 0)
+        path = self.home / ".pi/agent/settings.json"
+        path.unlink()
+        state = State(self.home)
+        state.data["files"].pop(".pi/agent/settings.json", None)
+        state.begin("install")
+        state.apply(".pi/agent/settings.json", b'{"shellPath":"/bin/bash"}\n', 0o600)
+        state.finish()
+        preferences = '{"shellPath":"/bin/bash","theme":"dark"}\n'
+        path.write_text(preferences)
+        return path, preferences
+
+    def test_legacy_pi_preferences_are_preserved_by_doctor_repeat_and_uninstall(self):
+        path, preferences = self.legacy_pi_preferences()
+        with patch("terminalkit.checks.live_checks", return_value=[]):
+            self.assertEqual(self.run_cli("doctor"), 0)
+        self.assertEqual(self.run_cli("install", "--modules", "pi"), 0)
+        self.assertNotIn(".pi/agent/settings.json", State(self.home).data["files"])
+        self.assertEqual(self.run_cli("uninstall"), 0)
+        self.assertEqual(path.read_text(), preferences)
+
+    def test_uninstall_preserves_edited_legacy_pi_preferences_without_reinstall(self):
+        path, preferences = self.legacy_pi_preferences()
+        self.assertEqual(self.run_cli("uninstall"), 0)
+        self.assertEqual(path.read_text(), preferences)
+
+    def test_doctor_still_rejects_invalid_pi_json_without_replacing_it(self):
+        self.assertEqual(self.run_cli("install", "--modules", "pi"), 0)
+        path = self.home / ".pi/agent/settings.json"
+        path.write_text("invalid json\n")
+        with patch("terminalkit.checks.live_checks", return_value=[]):
+            output = io.StringIO()
+            with redirect_stdout(output), redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.main(["doctor"]), 1)
+            self.assertIn("JSON syntax", output.getvalue())
+            self.assertNotIn("invalid json", output.getvalue())
+        self.assertEqual(path.read_text(), "invalid json\n")
+
     def test_minimal_preserves_existing_neovim_entry(self):
         path = self.home / ".config/nvim/init.lua"
         path.parent.mkdir(parents=True)
@@ -134,6 +190,8 @@ class InstallTests(unittest.TestCase):
         path.write_text("local edit\n")
         self.assertEqual(self.run_cli("install", "--modules", "configs"), 1)
         self.assertEqual(path.read_text(), "local edit\n")
+        with patch("terminalkit.checks.live_checks", return_value=[]):
+            self.assertEqual(self.run_cli("doctor"), 1)
 
 
 if __name__ == "__main__":
